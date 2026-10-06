@@ -1,7 +1,7 @@
 {
-  "voice_name": "Charon",
-  "active_character": "optimus_prime",
+  "voice_name": "Puck",
+  "active_character": "killer_bee",
   "audio_dsp_effect": "none",
   "camera_monitoring_fps": 1.0,
-  "description": "Default persistent voice, persona, and capability profile for VICTOR. Automatically loaded on startup."
+  "description": "Default persistent voice, persona, and capability profile for VICTOR. Killer Bee set as default persona."
 }
