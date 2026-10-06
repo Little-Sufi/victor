@@ -82,7 +82,7 @@ VICTOR seamlessly operates across three AI tiers with automatic zero-collision f
 
 ---
 
-## 🚀 Beginner-Friendly Setup Guide
+## 🚀 Setup Guide
 
 ### 🪟 Windows Setup (Windows 10 / 11)
 
