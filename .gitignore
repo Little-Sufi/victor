@@ -32,6 +32,7 @@ victor_error.log
 tasks/*.log
 tasks/task_*.log
 !tasks/.gitkeep
+antigravity_bridge.json
 
 # Notes & Private User Data
 notes/*.json
