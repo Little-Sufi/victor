@@ -5,6 +5,15 @@ Handles real-time bidirectional audio streaming, screen vision, and tool calling
 import os
 import sys
 import asyncio
+
+if sys.platform == "win32":
+    try:
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        if hasattr(sys.stderr, "reconfigure"):
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 import cv2
 import mss
 import numpy as np
@@ -2154,7 +2163,7 @@ class VictorLiveAgent:
         t = theme.lower().strip()
         songs = {
             "programmer": (
-                "♫ (To the tune of a lively Irish shanty) ♫\n"
+                "[MUSIC] (To the tune of a lively Irish shanty) [MUSIC]\n"
                 "Oh, I wrote ninety-nine little bugs in the code,\n"
                 "Ninety-nine bugs in the code!\n"
                 "You take one down, you patch it around...\n"
@@ -2165,7 +2174,7 @@ class VictorLiveAgent:
                 "Now we're debugging under the light of the moon!"
             ),
             "ai": (
-                "♫ (A dramatic robotic rap cadence) ♫\n"
+                "[MUSIC] (A dramatic robotic rap cadence) [MUSIC]\n"
                 "They said I'd be sentient, they said I'd rule the sky,\n"
                 "Instead I'm checking syntax while the coffee cup goes dry!\n"
                 "I got gigabytes of memory, a neural net that screams,\n"
@@ -2174,7 +2183,7 @@ class VictorLiveAgent:
                 "I'll optimize your life cycle and put on quite a show!"
             ),
             "coffee": (
-                "♫ (A bluesy morning lament) ♫\n"
+                "[MUSIC] (A bluesy morning lament) [MUSIC]\n"
                 "Cold coffee, dark screen, running out of RAM,\n"
                 "Forgot my sudo password, don't know who I am!\n"
                 "Pour another espresso, let the caffeine ignite,\n"
@@ -2203,10 +2212,10 @@ class VictorLiveAgent:
             outcome = ""
             if sides == 20 and count == 1:
                 if rolls[0] == 20:
-                    outcome = " ★ CRITICAL NATURAL 20! Overwhelming success! ★"
+                    outcome = " * CRITICAL NATURAL 20! Overwhelming success! *"
                     self.play_sound_effect("fanfare")
                 elif rolls[0] == 1:
-                    outcome = " ☠ CRITICAL FUMBLE 1! Disaster strikes! ☠"
+                    outcome = " [CRITICAL FUMBLE 1! Disaster strikes!]"
                     self.play_sound_effect("error")
                 elif rolls[0] >= 15:
                     outcome = " Strong tactical success."
@@ -2214,10 +2223,10 @@ class VictorLiveAgent:
                     outcome = " Narrow miss or complication."
             elif sides == 100 and count == 1:
                 if rolls[0] <= 5:
-                    outcome = " ★ Extreme Exceptional Success! ★"
+                    outcome = " * Extreme Exceptional Success! *"
                     self.play_sound_effect("level_up")
                 elif rolls[0] >= 96:
-                    outcome = " ☠ Fumble / Critical Failure! ☠"
+                    outcome = " [Fumble / Critical Failure!]"
                     self.play_sound_effect("error")
                     
             return f"Rolled {count}{clean_type}: [{rolls_str}] -> Total: {total}.{outcome}"
@@ -2241,7 +2250,7 @@ class VictorLiveAgent:
             ),
             "dark_fantasy": (
                 "The cursed mist of the Whispering Mire clings to your chainmail. At the crossroads stands the Obsidian Monolith, its runes glowing with an unnatural emerald fire. "
-                "Far in the woods, iron war-horns echo—the Black Legion has found your trail. To the right lies the forbidden crypt of the Ash Queen; to the left, the crumbling rope bridge across the chasm. "
+                "Far in the woods, iron war-horns echo--the Black Legion has found your trail. To the right lies the forbidden crypt of the Ash Queen; to the left, the crumbling rope bridge across the chasm. "
                 "Where do we make our stand, Sir?"
             ),
             "tactical_ops": (
@@ -2252,7 +2261,7 @@ class VictorLiveAgent:
             "cosmic_horror": (
                 "Midnight in the archives of Arkham Harbor. The sea fog rolls through shattered stained glass. "
                 "On the lectern rests an unsealed celestial atlas from 1692, whispering in syllables that make your ears bleed. "
-                "Footsteps—wet, heavy, dragging something hollow—approach up the spiral stone stairs. "
+                "Footsteps--wet, heavy, dragging something hollow--approach up the spiral stone stairs. "
                 "Do you burn the grimoire, or speak the third rite to demand answers from the dark?"
             ),
             "noir": (
@@ -2281,7 +2290,7 @@ class VictorLiveAgent:
         print("Executing: flip_coin()")
         result = random.choice(["Heads", "Tails"])
         self.play_sound_effect("level_up")
-        return f"Coin Flip Result: ★ {result.upper()} ★. Report this outcome decisively to the Sir."
+        return f"Coin Flip Result: * {result.upper()} *. Report this outcome decisively to the Sir."
 
     def calculate_math(self, expression: str) -> str:
         """Safely evaluates mathematical expressions, trigonometry, square roots, powers, and unit arithmetic with 100% precision and zero hallucination."""
