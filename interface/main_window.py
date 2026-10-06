@@ -1,229 +1,188 @@
 """
 VICTOR Interface - Advanced Glowing Orb
-A dynamic, animated, futuristic 3D orb interface.
+A dynamic, animated, futuristic glowing orb interface powered by Gemini Live API.
+Completely translucent (no square box), draggable, with energy rings and responsive states.
 """
 import sys
 import os
-from pathlib import Path
 import math
 import random
+import threading
+import asyncio
+from pathlib import Path
 
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QLabel, QApplication, QSystemTrayIcon, QMenu, QGraphicsDropShadowEffect
+    QWidget, QVBoxLayout, QLabel, QApplication, QSystemTrayIcon, QMenu, 
+    QGraphicsDropShadowEffect, QStyle, QInputDialog, QLineEdit
 )
 from PySide6.QtCore import (
-    Qt, QTimer, QPoint, QPointF, Signal, QThread
+    Qt, QTimer, QPointF, Signal
 )
 from PySide6.QtGui import (
-    QFont, QColor, QPainter, QRadialGradient, QConicalGradient, QBrush, QPen, QMouseEvent, QAction, QIcon
+    QColor, QPainter, QRadialGradient, QConicalGradient, QPen, QMouseEvent, QAction
 )
 
-# Add parent to path for imports
+# Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from core.victor_core import VictorCore, VictorState
-
-
-class ListenWorker(QThread):
-    """Worker thread for click-to-speak (one-shot listen)."""
-    result_ready = Signal(str)
-
-    def __init__(self, victor):
-        super().__init__()
-        self.victor = victor
-
-    def run(self):
-        result = self.victor.listen_once()
-        self.result_ready.emit(result if result else "")
+from core.gemini_live import VictorLiveAgent
 
 
 class VictorOrb(QWidget):
-    """Advanced Dynamic Orb Interface for VICTOR."""
+    """Futuristic Floating Orb Interface for VICTOR."""
     
-    # Thread-safe signals for cross-thread GUI updates
-    wake_word_signal = Signal()
-    speak_signal = Signal(str)
-    state_change_signal = Signal(object)
-    thought_signal = Signal(str)
+    # Thread-safe Qt signals
+    status_signal = Signal(str)
+    subtitle_signal = Signal(str)
 
     def __init__(self):
         super().__init__()
         
-        self.victor = None
+        self.agent = None
+        self.agent_thread = None
         self.drag_position = None
-        self._listen_worker = None
+        self._is_drag = False
         
-        # Animation state variables
+        # Visual animation parameters
         self.phase = 0.0
-        self.base_radius = 65
-        self.pulse_radius = 0
+        self.base_radius = 70.0
+        self.pulse_radius = 0.0
         
         # State Colors
-        self.color_idle = QColor(0, 212, 255)      # Cyan
-        self.color_listening = QColor(48, 209, 88) # Bright Green
-        self.color_thinking = QColor(191, 90, 242) # Electric Purple
-        self.color_speaking = QColor(10, 132, 255) # Deep Blue
+        self.color_idle = QColor(0, 240, 255)       # Electric Cyan
+        self.color_listening = QColor(48, 209, 88)  # Neon Green
+        self.color_thinking = QColor(191, 90, 242)  # Holographic Purple
+        self.color_speaking = QColor(10, 132, 255)  # Energetic Deep Blue
         
         self.current_color = self.color_idle
         self.target_color = self.color_idle
+        self.current_state = "idle"
         
         self._setup_window()
         self._setup_ui()
         self._setup_system_tray()
         
-        # Connect signals to slots (thread-safe)
-        self.state_change_signal.connect(self._on_state_change)
-        self.thought_signal.connect(self._on_thought)
-        self.wake_word_signal.connect(self._on_wake_word)
-        self.speak_signal.connect(self._handle_speak)
+        # Connect signals
+        self.status_signal.connect(self._on_status_change)
+        self.subtitle_signal.connect(self._on_subtitle_change)
         
-        # Animation Timer (Smooth 60fps ~ 16ms)
+        # Smooth 60fps render loop
         self.anim_timer = QTimer(self)
         self.anim_timer.timeout.connect(self._animate)
         self.anim_timer.start(16)
         
-        self._init_victor()
+        self._start_agent()
 
     def _setup_window(self):
         self.setWindowTitle("VICTOR")
-        self.setFixedSize(380, 420)
+        self.setFixedSize(400, 440)
         
-        # Frameless, transparent, always on top
+        # Frameless, transparent, stays on top
         self.setWindowFlags(
             Qt.FramelessWindowHint |
-            Qt.WindowStaysOnTopHint |
-            Qt.Tool
+            Qt.WindowStaysOnTopHint
         )
-        self.setAttribute(Qt.WA_TranslucentBackground)
+        self.setAttribute(Qt.WA_TranslucentBackground, True)
         
-        # Center on screen
+        # Center in screen
         screen = QApplication.primaryScreen().geometry()
         self.move(
-            (screen.width() - 380) // 2,
-            (screen.height() - 420) // 2
+            (screen.width() - 400) // 2,
+            (screen.height() - 440) // 2
         )
 
     def _setup_ui(self):
         layout = QVBoxLayout(self)
-        # Push the label down below the orb
-        layout.setContentsMargins(20, 260, 20, 20)
+        layout.setContentsMargins(20, 275, 20, 20)
         
-        # Subtitle / Status Label
-        self.subtitle_label = QLabel("Initializing Systems...")
+        # Futuristic HUD Subtitle
+        self.subtitle_label = QLabel("Initializing VICTOR...")
         self.subtitle_label.setAlignment(Qt.AlignCenter)
         self.subtitle_label.setWordWrap(True)
         self.subtitle_label.setStyleSheet("""
-            color: rgba(255, 255, 255, 200);
-            font-family: 'Segoe UI', 'Helvetica Neue', sans-serif;
-            font-size: 14px;
-            font-weight: 500;
-            background-color: rgba(15, 15, 20, 150);
-            border: 1px solid rgba(255, 255, 255, 20);
-            border-radius: 15px;
-            padding: 12px 18px;
+            QLabel {
+                color: rgba(255, 255, 255, 230);
+                font-family: 'Segoe UI', 'Helvetica Neue', 'Arial', sans-serif;
+                font-size: 13px;
+                font-weight: 600;
+                background-color: rgba(10, 12, 20, 190);
+                border: 1px solid rgba(0, 240, 255, 60);
+                border-radius: 16px;
+                padding: 10px 18px;
+            }
         """)
         
-        # Drop shadow for text readability and aesthetic depth
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 180))
-        shadow.setOffset(0, 5)
+        shadow = QGraphicsDropShadowEffect(self)
+        shadow.setBlurRadius(25)
+        shadow.setColor(QColor(0, 240, 255, 70))
+        shadow.setOffset(0, 4)
         self.subtitle_label.setGraphicsEffect(shadow)
         
         layout.addWidget(self.subtitle_label)
 
-    def _init_victor(self):
-        class InitWorker(QThread):
-            finished = Signal(object)
-            def run(self):
-                v = VictorCore()
-                self.finished.emit(v)
+    def _start_agent(self):
+        """Starts VictorLiveAgent in a dedicated daemon thread."""
+        def on_status(s):
+            self.status_signal.emit(s)
+            
+        def on_subtitle(text):
+            self.subtitle_signal.emit(text)
 
-        self.init_thread = InitWorker()
-        self.init_thread.finished.connect(self._on_victor_ready)
-        self.init_thread.start()
+        self.agent = VictorLiveAgent(
+            on_status_change=on_status,
+            on_subtitle_change=on_subtitle
+        )
 
-    def _on_victor_ready(self, victor: VictorCore):
-        self.victor = victor
-        
-        # Wire up callbacks — use signals for thread safety
-        # (always-on mic runs in a background thread, GUI must update on main thread)
-        self.victor.on_state_change = lambda state: self.state_change_signal.emit(state)
-        self.victor.on_thought = lambda text: self.thought_signal.emit(text)
-        self.victor.on_wake_word_detected = lambda: self.wake_word_signal.emit()
-        self.victor.on_speak = lambda text: self.speak_signal.emit(text)
-        
-        # Start always-on voice mode — mic is now permanently active
-        self.victor.start_voice_mode()
-        
-        self.subtitle_label.setText("VICTOR Online\n🎤 Always listening — say 'Hey VICTOR'")
-        self.target_color = self.color_idle
-        
-        # Show the orb now that Victor is ready
-        self.show()
-        self.activateWindow()
-        self.raise_()
+        def run_loop():
+            try:
+                asyncio.run(self.agent.run())
+            except Exception as e:
+                print(f"[Victor Orb] Agent thread error: {e}")
 
-    def _handle_speak(self, text: str):
-        """Handle speak signal — runs TTS in a thread to not block GUI."""
-        if self.victor and self.victor.voice:
-            self.victor.voice.speak(text, block=False)
+        self.agent_thread = threading.Thread(target=run_loop, daemon=True)
+        self.agent_thread.start()
 
-    def _on_wake_word(self):
-        """Flash the orb green when wake word is heard."""
-        self.subtitle_label.setText("🎤 Heard you!")
-        self.target_color = self.color_listening
-        self.show()
-        self.activateWindow()
-        self.raise_()
-
-    def _on_state_change(self, state: VictorState):
-        if state.listening and not state.processing and not state.speaking:
-            self.subtitle_label.setText("🎤 Listening...")
+    def _on_status_change(self, status: str):
+        self.current_state = status
+        if status == "listening":
             self.target_color = self.color_listening
-        elif state.processing:
-            self.subtitle_label.setText("🧠 Thinking...")
+        elif status == "thinking":
             self.target_color = self.color_thinking
-        elif state.speaking:
-            self.subtitle_label.setText("🔊 Speaking...")
+        elif status == "speaking":
             self.target_color = self.color_speaking
-        else:
-            self.subtitle_label.setText("Online\n🎤 Say 'Hey VICTOR'")
+        else: # idle
             self.target_color = self.color_idle
 
-    def _on_thought(self, thought: str):
-        display_text = thought.replace('[Thought]', '').strip()
-        if len(display_text) > 100:
-            display_text = display_text[:97] + "..."
+    def _on_subtitle_change(self, text: str):
+        display_text = text.strip()
+        if len(display_text) > 120:
+            display_text = display_text[:117] + "..."
         self.subtitle_label.setText(display_text)
 
     def _animate(self):
-        # Time progression
+        # Progress phase
         dt = 0.05
         self.phase += dt
         
-        # Smooth Color Interpolation
-        r = int(self.current_color.red() + (self.target_color.red() - self.current_color.red()) * 0.05)
-        g = int(self.current_color.green() + (self.target_color.green() - self.current_color.green()) * 0.05)
-        b = int(self.current_color.blue() + (self.target_color.blue() - self.current_color.blue()) * 0.05)
+        # Color interpolation
+        r = int(self.current_color.red() + (self.target_color.red() - self.current_color.red()) * 0.08)
+        g = int(self.current_color.green() + (self.target_color.green() - self.current_color.green()) * 0.08)
+        b = int(self.current_color.blue() + (self.target_color.blue() - self.current_color.blue()) * 0.08)
         self.current_color = QColor(r, g, b)
         
         # Dynamic pulse radius based on state
-        if self.victor:
-            if self.victor.state.listening:
-                self.pulse_radius = math.sin(self.phase * 3) * 12
-                self.phase += 0.05 # Speed up phase
-            elif self.victor.state.processing:
-                self.pulse_radius = math.sin(self.phase * 4) * 8
-                self.phase += 0.1 # Fast phase
-            elif self.victor.state.speaking:
-                self.pulse_radius = math.sin(self.phase * 5) * 15 + random.uniform(-4, 4)
-                self.phase += 0.08
-            else:
-                # Idle breathing
-                self.pulse_radius = math.sin(self.phase * 0.8) * 4
+        if self.current_state == "listening":
+            self.pulse_radius = math.sin(self.phase * 3.5) * 10.0
+            self.phase += 0.04
+        elif self.current_state == "thinking":
+            self.pulse_radius = math.sin(self.phase * 4.5) * 7.0
+            self.phase += 0.08
+        elif self.current_state == "speaking":
+            self.pulse_radius = math.sin(self.phase * 5.5) * 14.0 + random.uniform(-2.5, 2.5)
+            self.phase += 0.06
         else:
-            self.pulse_radius = math.sin(self.phase * 0.8) * 4
+            # Idle smooth breathing
+            self.pulse_radius = math.sin(self.phase * 1.0) * 4.0
             
         self.update()
 
@@ -231,91 +190,78 @@ class VictorOrb(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
         
-        # Orb Center
-        center = QPointF(self.width() / 2.0, 140.0)
+        center = QPointF(self.width() / 2.0, 145.0)
         current_radius = self.base_radius + self.pulse_radius
         
-        # Extract base colors for gradients
         cr = self.current_color.red()
         cg = self.current_color.green()
         cb = self.current_color.blue()
         
-        # =========================================================================
-        # 1. AMBIENT OUTER GLOW
-        # =========================================================================
+        # 1. AMBIENT GLOW (Diffused aura)
         painter.save()
-        glow_radius = current_radius + 90
+        glow_radius = current_radius + 95.0
         glow_grad = QRadialGradient(center, glow_radius)
         glow_grad.setColorAt(0.0, QColor(cr, cg, cb, 0))
-        glow_grad.setColorAt(0.4, QColor(cr, cg, cb, 15))
-        glow_grad.setColorAt(0.7, QColor(cr, cg, cb, 5))
+        glow_grad.setColorAt(0.4, QColor(cr, cg, cb, 25))
+        glow_grad.setColorAt(0.7, QColor(cr, cg, cb, 10))
         glow_grad.setColorAt(1.0, QColor(cr, cg, cb, 0))
         painter.setBrush(glow_grad)
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(center, glow_radius, glow_radius)
         painter.restore()
         
-        # =========================================================================
-        # 2. THE MAIN GLASS ORB BODY
-        # =========================================================================
+        # 2. GLASS SPHERE SHELL (Multi-layer gradient)
         painter.save()
         main_grad = QRadialGradient(center, current_radius)
-        # Deep translucent core
-        main_grad.setColorAt(0.0, QColor(255, 255, 255, 220))
-        main_grad.setColorAt(0.3, QColor(cr, cg, cb, 180))
-        main_grad.setColorAt(0.7, QColor(cr, cg, cb, 80))
-        main_grad.setColorAt(0.9, QColor(min(cr+50, 255), min(cg+50, 255), min(cb+50, 255), 160)) # Edge highlight
+        main_grad.setColorAt(0.0, QColor(255, 255, 255, 230))
+        main_grad.setColorAt(0.3, QColor(cr, cg, cb, 190))
+        main_grad.setColorAt(0.7, QColor(cr, cg, cb, 90))
+        main_grad.setColorAt(0.9, QColor(min(cr+55, 255), min(cg+55, 255), min(cb+55, 255), 180))
         main_grad.setColorAt(1.0, QColor(cr, cg, cb, 0))
         painter.setBrush(main_grad)
         painter.setPen(Qt.NoPen)
         painter.drawEllipse(center, current_radius, current_radius)
         painter.restore()
 
-        # =========================================================================
-        # 3. ROTATING ENERGY RINGS
-        # =========================================================================
-        # Ring 1
+        # 3. OUTER ROTATING ENERGY RING 1
         painter.save()
-        ring1_radius = current_radius + 8
-        ring1_grad = QConicalGradient(center, math.degrees(self.phase))
+        ring1_radius = current_radius + 10.0
+        ring1_grad = QConicalGradient(center, math.degrees(self.phase * 1.2))
         ring1_grad.setColorAt(0.0, QColor(cr, cg, cb, 0))
-        ring1_grad.setColorAt(0.2, QColor(255, 255, 255, 200))
-        ring1_grad.setColorAt(0.5, QColor(cr, cg, cb, 100))
-        ring1_grad.setColorAt(0.8, QColor(255, 255, 255, 200))
+        ring1_grad.setColorAt(0.25, QColor(255, 255, 255, 220))
+        ring1_grad.setColorAt(0.5, QColor(cr, cg, cb, 120))
+        ring1_grad.setColorAt(0.75, QColor(255, 255, 255, 220))
         ring1_grad.setColorAt(1.0, QColor(cr, cg, cb, 0))
         
-        pen1 = QPen(ring1_grad, 2.0)
+        pen1 = QPen(ring1_grad, 2.2)
         pen1.setCapStyle(Qt.RoundCap)
         painter.setPen(pen1)
         painter.setBrush(Qt.NoBrush)
         painter.drawEllipse(center, ring1_radius, ring1_radius)
         painter.restore()
 
-        # Ring 2 (Counter-rotating, slightly larger, variable based on state)
-        if self.victor and (self.victor.state.processing or self.victor.state.listening):
-            painter.save()
-            ring2_radius = current_radius + 18
-            ring2_grad = QConicalGradient(center, -math.degrees(self.phase * 1.5))
-            ring2_grad.setColorAt(0.0, QColor(255, 255, 255, 0))
-            ring2_grad.setColorAt(0.3, QColor(cr, cg, cb, 180))
-            ring2_grad.setColorAt(0.7, QColor(cr, cg, cb, 180))
-            ring2_grad.setColorAt(1.0, QColor(255, 255, 255, 0))
-            
-            pen2 = QPen(ring2_grad, 1.0)
-            painter.setPen(pen2)
-            painter.setBrush(Qt.NoBrush)
-            painter.drawEllipse(center, ring2_radius, ring2_radius)
-            painter.restore()
+        # 4. COUNTER-ROTATING ENERGY RING 2
+        painter.save()
+        ring2_radius = current_radius + 20.0
+        ring2_grad = QConicalGradient(center, -math.degrees(self.phase * 1.8))
+        ring2_grad.setColorAt(0.0, QColor(255, 255, 255, 0))
+        ring2_grad.setColorAt(0.3, QColor(cr, cg, cb, 160))
+        ring2_grad.setColorAt(0.7, QColor(cr, cg, cb, 160))
+        ring2_grad.setColorAt(1.0, QColor(255, 255, 255, 0))
         
-        # =========================================================================
-        # 4. INNER ENERGY CORE (Pulsating intensely when speaking)
-        # =========================================================================
-        if self.victor and self.victor.state.speaking:
+        pen2 = QPen(ring2_grad, 1.4)
+        painter.setPen(pen2)
+        painter.setBrush(Qt.NoBrush)
+        painter.drawEllipse(center, ring2_radius, ring2_radius)
+        painter.restore()
+
+        # 5. INNER ENERGY CORE (Intense pulsing when active/speaking)
+        if self.current_state in ["speaking", "thinking"]:
             painter.save()
-            core_radius = current_radius * 0.4 + random.uniform(0, 5)
+            core_radius = current_radius * 0.45 + (random.uniform(-3, 3) if self.current_state == "speaking" else 0)
             core_grad = QRadialGradient(center, core_radius)
             core_grad.setColorAt(0.0, QColor(255, 255, 255, 255))
-            core_grad.setColorAt(0.5, QColor(cr, cg, cb, 200))
+            core_grad.setColorAt(0.5, QColor(cr, cg, cb, 210))
             core_grad.setColorAt(1.0, QColor(cr, cg, cb, 0))
             painter.setBrush(core_grad)
             painter.setPen(Qt.NoPen)
@@ -324,7 +270,7 @@ class VictorOrb(QWidget):
 
         painter.end()
 
-    # --- Mouse Interaction ---
+    # --- Mouse Gestures & Window Movement ---
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
             self.drag_position = event.globalPosition().toPoint() - self.frameGeometry().topLeft()
@@ -336,96 +282,108 @@ class VictorOrb(QWidget):
             self.move(event.globalPosition().toPoint() - self.drag_position)
             self._is_drag = True
             event.accept()
-            
+
     def mouseReleaseEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
-            if not getattr(self, '_is_drag', False):
-                self._click_to_speak()
+            if not self._is_drag:
+                # Click gesture: toggle mute or interrupt speech
+                self._on_orb_clicked()
             self._is_drag = False
-            
+            event.accept()
+
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
+        """Double click opens quick text command prompt."""
+        if event.button() == Qt.LeftButton:
+            self._prompt_text_command()
+            event.accept()
+
+    def _on_orb_clicked(self):
+        """Action when user taps/clicks the orb."""
+        if not self.agent:
+            return
+        if self.agent.is_speaking:
+            # Tap orb to silence / interrupt
+            self.agent.is_speaking = False
+            while not self.agent.audio_out_queue.empty():
+                try:
+                    self.agent.audio_out_queue.get_nowait()
+                    self.agent.audio_out_queue.task_done()
+                except:
+                    break
+            self.subtitle_label.setText("VICTOR: Silenced")
+            self.target_color = self.color_idle
+        else:
+            # Tap orb to toggle mute
+            self.agent.is_muted = not self.agent.is_muted
+            if self.agent.is_muted:
+                self.subtitle_label.setText("🎤 Mic Muted (Click orb to unmute)")
+                self.target_color = QColor(255, 69, 58) # Red
+            else:
+                self.subtitle_label.setText("🎤 Mic Active — speak freely")
+                self.target_color = self.color_idle
+
+    def _prompt_text_command(self):
+        """Opens a dialog to send a text command directly to Victor."""
+        text, ok = QInputDialog.getText(
+            self, "VICTOR Command", "Enter message or command for VICTOR:",
+            QLineEdit.Normal, ""
+        )
+        if ok and text.strip() and self.agent:
+            self.agent.send_text(text.strip())
+
     def contextMenuEvent(self, event):
-        """Right click menu."""
+        """Right-click menu for quick actions."""
         menu = QMenu(self)
         menu.setStyleSheet("""
-            QMenu { background-color: #1a1a2e; color: #00d4ff; border: 1px solid #00d4ff; border-radius: 5px;}
-            QMenu::item { padding: 5px 20px; }
-            QMenu::item:selected { background-color: #00d4ff; color: #000000; }
+            QMenu {
+                background-color: #0b0e14;
+                color: #00f0ff;
+                border: 1px solid #00f0ff;
+                border-radius: 8px;
+                padding: 5px;
+            }
+            QMenu::item {
+                padding: 6px 24px;
+                border-radius: 4px;
+            }
+            QMenu::item:selected {
+                background-color: #00f0ff;
+                color: #000000;
+            }
         """)
-        
-        diag_act = QAction("Diagnostics", self)
-        diag_act.triggered.connect(lambda: self._on_thought(self.victor.self_diagnose() if self.victor else "Not ready"))
-        menu.addAction(diag_act)
 
-        hide_act = QAction("Hide", self)
+        cmd_act = QAction("💬 Send Command...", self)
+        cmd_act.triggered.connect(self._prompt_text_command)
+        menu.addAction(cmd_act)
+
+        menu.addSeparator()
+
+        mute_text = "Unmute Mic" if (self.agent and self.agent.is_muted) else "Mute Mic"
+        mute_act = QAction(mute_text, self)
+        mute_act.triggered.connect(self._on_orb_clicked)
+        menu.addAction(mute_act)
+
+        hide_act = QAction("Hide to Tray", self)
         hide_act.triggered.connect(self.hide_to_background)
         menu.addAction(hide_act)
+
+        menu.addSeparator()
 
         exit_act = QAction("Shutdown VICTOR", self)
         exit_act.triggered.connect(self._quit)
         menu.addAction(exit_act)
-        
-        menu.exec_(event.globalPos())
 
-    def _click_to_speak(self):
-        """Click the orb to do a one-shot listen (in addition to always-on)."""
-        if not self.victor:
-            return
-            
-        self.show()
-        self.activateWindow()
-        self.raise_()
-        
-        # Stop any current speech
-        if self.victor.voice:
-            self.victor.voice.stop_speaking()
-            
-        # If a listen worker is already running, cancel it
-        if self._listen_worker and self._listen_worker.isRunning():
-            try:
-                self._listen_worker.terminate()
-                self._listen_worker.wait(200)
-            except:
-                pass
-                
-            self.victor.state.listening = False
-            self.victor.state.processing = False
-            self.victor.state.speaking = False
-            self._on_state_change(self.victor.state)
-
-        # Temporarily pause always-on so they don't conflict
-        was_always_on = self.victor.voice._always_on
-        if was_always_on:
-            self.victor.voice.stop_always_on()
-
-        self.subtitle_label.setText("🎤 Listening (click)...")
-        self.target_color = self.color_listening
-
-        self._listen_worker = ListenWorker(self.victor)
-
-        def on_result(r):
-            if r:
-                display = r[:100] + ("..." if len(r) > 100 else "")
-                self.subtitle_label.setText(display)
-            else:
-                self.subtitle_label.setText("Online\n🎤 Say 'Hey VICTOR'")
-            self.target_color = self.color_idle
-            # Restart always-on after click-to-speak finishes
-            if was_always_on:
-                self.victor.start_voice_mode()
-
-        self._listen_worker.result_ready.connect(on_result)
-        self._listen_worker.start()
+        menu.exec(event.globalPos())
 
     def _setup_system_tray(self):
         self.tray_icon = QSystemTrayIcon(self)
-        from PySide6.QtWidgets import QStyle
         icon = QApplication.style().standardIcon(QStyle.StandardPixmap.SP_ComputerIcon)
         self.tray_icon.setIcon(icon)
         
         tray_menu = QMenu()
         show_action = QAction("Show Victor", self)
         show_action.triggered.connect(self.show_from_background)
-        hide_action = QAction("Hide to Background", self)
+        hide_action = QAction("Hide to Tray", self)
         hide_action.triggered.connect(self.hide_to_background)
         quit_action = QAction("Quit", self)
         quit_action.triggered.connect(self._quit)
@@ -440,7 +398,6 @@ class VictorOrb(QWidget):
 
     def hide_to_background(self):
         self.hide()
-        self.subtitle_label.setText("Running in Background")
 
     def show_from_background(self):
         self.show()
@@ -448,10 +405,12 @@ class VictorOrb(QWidget):
         self.raise_()
 
     def _quit(self):
-        if self.victor:
-            self.victor.shutdown()
+        if self.agent:
+            self.agent.stop()
         self.tray_icon.hide()
         QApplication.quit()
+        os._exit(0)
+
 
 def main():
     app = QApplication(sys.argv)
@@ -459,5 +418,11 @@ def main():
     
     window = VictorOrb()
     window.show()
+    window.raise_()
+    window.activateWindow()
     
     sys.exit(app.exec())
+
+
+if __name__ == "__main__":
+    main()

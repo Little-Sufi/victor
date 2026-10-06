@@ -1,0 +1,52 @@
+# Environment and API Keys (CRITICAL: Never commit secrets)
+.env
+.env.local
+.env.*.local
+*.env
+
+# Python Virtual Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+
+# Node.js Dependencies & Logs
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Logs & Temporary Files
+*.log
+victor_error.log
+tasks/*.log
+tasks/task_*.log
+!tasks/.gitkeep
+
+# Notes & Private User Data
+notes/*.json
+!notes/.gitkeep
+
+# Vector Store, Models & Cache
+data/vector_store/
+data/*.db
+data/memory.db
+*.pt
+*.onnx
+*.bin
+.cache/
+
+# OS Specific
+.DS_Store
+Thumbs.db
+desktop.ini

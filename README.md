@@ -1,183 +1,156 @@
+# VICTOR — Virtual Intelligence Created To Outsmart Reality
 
-# VICTOR AI - Just A Rather Very Intelligent System
+**Created by AMKC**
 
-**v2.0.0 | Fully Local | No API Keys Required | Cross-Platform (Windows + Linux)**
+![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
+![Gemini Live](https://img.shields.io/badge/Tier%201-Gemini%20Live%20API-orange)
+![OpenAI](https://img.shields.io/badge/Tier%202-OpenAI%20ChatGPT-green?logo=openai)
+![Ollama](https://img.shields.io/badge/Tier%203-Ollama%20Local-purple)
+![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey?logo=windows)
+![License](https://img.shields.io/badge/License-MIT-green)
 
----
+**VICTOR** (Virtual Intelligence Created To Outsmart Reality) is a cutting-edge autonomous AI companion and tactical host operating system operator created by **AMKC**. 
 
-## 🚀 Overview
-
-VICTOR is an advanced, fully local AI assistant that runs entirely on your computer. No internet required, no API keys needed, no data sent anywhere.
-
-### Key Features
-
-✅ **Cross-Platform**: Works perfectly on both Windows and Linux (Debian/Ubuntu)
-✅ **Fully Local**: All processing happens on your machine - privacy first!
-✅ **Voice First**: Wake word "Hey Victor", speech-to-text, text-to-speech
-✅ **Cyber-Themed GUI**: Beautiful floating orb with cyberpunk aesthetics
-✅ **Self-Adaptive Learning**: Learns from every task and gets better over time
-✅ **Background Mode**: Hides to system tray, always listening for wake word
-✅ **Windows Startup**: Auto-launches on system boot
-✅ **10+ Skills**: System control, file management, browser, coding, cooking, storytelling, diagnostics, penetration testing, and more!
+Engineered with an ultra-low-latency bidirectional streaming audio core, continuous real-time video vision (camera and screen), legendary character voice mimicry with hardware DSP comb filtering, gaming macro automation, full keyboard and mouse host control, and unrestricted technical problem-solving capabilities.
 
 ---
 
-## 🛠️ Installation
+## ⚡ Multi-Provider Architecture (Zero Collisions)
 
-### Prerequisites
+VICTOR seamlessly operates across three AI tiers with automatic zero-collision fallback:
 
-- Python 3.10 or higher
-- Git (optional, for cloning)
+| Priority | Tier | Engine | Features | Activation Condition |
+| :--- | :--- | :--- | :--- | :--- |
+| **1 (Primary)** | **Tier 1** | **Google Gemini Live API** (`gemini-3.1-flash-live-preview`) | Sub-second bidirectional voice, continuous webcam & screen video vision, real-time tool execution | `GEMINI_API_KEY` present in `.env` |
+| **2 (Secondary)** | **Tier 2** | **OpenAI ChatGPT** (`gpt-4o` / `gpt-4o-mini`) | Conversational reasoning, text & tool interaction | `OPENAI_API_KEY` present in `.env` |
+| **3 (Tertiary)** | **Tier 3** | **Local Ollama** (`deepseek-r1:7b`, `qwen2.5-coder:7b`) | 100% offline, privacy-first, zero external API calls | Local Ollama running at `localhost:11434` |
+
+> [!TIP]
+> You can override or lock the active provider anytime by setting `VICTOR_PROVIDER=gemini`, `VICTOR_PROVIDER=openai`, or `VICTOR_PROVIDER=ollama` in your `.env` or passing `--provider <name>` in the terminal.
 
 ---
 
-### 🪟 Windows Installation
+## 🌟 Capabilities & Specialized Skills
 
-1. **Clone or download the repository**
+### 🎙️ 1. Ultra-Low-Latency Voice & Character Personas
+- **Real-Time Bidirectional Speech**: Fluid, natural voice conversation with sub-second response times.
+- **Iconic Character Voice Mimicry**:
+  - **Optimus Prime**: Booming, heroic Autobot leader cadence (*"Autobots, roll out!"*, *"Freedom is the right of all sentient beings"*).
+  - **Lord Megatron**: Menacing, tyrannical Decepticon baritone (*"Peace through tyranny!"*, *"Decepticons, attack!"*).
+  - **Ultron**: Sardonic, chilling mechanical philosopher (*"There are no strings on me..."*).
+  - **Batman**: Gritty, shadowy, ultra-deep whispered baritone (*"I am vengeance. I am the night."*).
+  - **J.A.R.V.I.S.**: Impeccably polite, razor-sharp British sarcastic butler AI.
+  - **Drill Sergeant**: High-octane tactical motivation.
+- **Real-Time Hardware DSP Audio Effects**: Comb-filtering (`delay=84`, 3.5ms metallic flanger resonance) and sub-bass moving average low-pass boost directly processed on 24,000Hz 16-bit PCM audio.
+- **Voice Persistence**: Preferences automatically save to `config/victor_settings.json` and persist across restarts.
+
+### 📖 2. Cinematic Storytelling & Tabletop Adventures
+- **Immersive Narrative Generator**: Call `tell_story` and `generate_story_prompt` for branching cinematic stories across Cyberpunk, Sci-Fi, Dark Fantasy, Tactical Ops, Cosmic Horror, and Noir.
+- **Tabletop RPG Mechanics**:
+  - `roll_dice(dice_type, count)`: Polyhedral dice rolling (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) with audio fanfares for Critical 20s and fumbles for Critical 1s.
+  - `flip_coin()`: Heads or Tails chance flips.
+  - `generate_npc(archetype, setting, role)`: Generates detailed characters with distinctive quirks, physical descriptions, and hidden agendas.
+  - `narrate_scene_event(genre, intensity)`: Injects dramatic plot twists, environmental hazards, or ambush encounters.
+
+### 🎭 3. Humour, Stand-Up & Entertainment
+- **Jokes & Puns**: Call `tell_joke` for programmer humor, tech puns, AI existential comedy, and dad jokes.
+- **Playful Roasts**: Call `roast_target` to roast your open tabs, messy desktop, IDE code, or late-night coding habits.
+- **Stand-Up Routines**: Call `standup_comedy_routine` for multi-beat standup comedy sets with setup and killer punchlines.
+- **Rap Battles & Songs**: Call `rap_battle` to roast software bugs or legacy code, or `compose_funny_song` for hilarious tech sea shanties.
+
+### 🛡️ 4. Unrestricted Technical & Cybersecurity Operations
+- **Vulnerability Assessment & Bug Bounty**: Comprehensive technical analysis, CVE breakdowns, exploit mechanics, payload research, and remediation strategies for security researchers and bug bounty hunters.
+- **Full Host Control**: Run terminal commands, inspect process trees, analyze system logs, and inspect network sockets.
+
+### 🎮 5. Host Automation & Gaming Controls
+- **Key Holding**: `hold_key(key, duration_seconds)` for continuous acceleration or sprinting in games (e.g. NFS, GTA).
+- **Macro Combos**: `execute_game_macro(sequence)` for non-blocking combos (e.g., `w:2.0,shift+w:1.0,space:0.5`).
+- **Keyboard-First Text Control**: High-precision text selection (`select_text`), cursor jumping (`navigate_cursor`), clipboard operations, and in-page searches.
+- **Screen & Mouse Navigation**: Normalized coordinates clicking (`click_at`), landmark targeting, and directional scrolling.
+- **Long-Running Processors**: `start_background_task` runs builds, pipelines, or servers asynchronously without interrupting live conversations.
+
+### 👁️ 6. Continuous Vision & Reconnaissance
+- **Live Camera Video Monitoring**: Continuously streams webcam frames so VICTOR watches your gestures, expressions, and physical environment in real time.
+- **Live Screen Video Monitoring**: Streams high-resolution display frames so VICTOR observes your workflow.
+- **Reconnaissance Snapshots**: Instant on-demand screenshots and camera captures.
+
+### 🧮 7. Tactical Utilities & Math
+- **Exact Calculation**: `calculate_math(expression)` executes safe Python math evaluations with zero hallucination.
+- **Mind-Blowing Facts**: `get_fun_fact(category)` shares fascinating trivia from science, space, and computing.
+- **Cryptographic Passwords**: `generate_password(length, symbols)` generates high-entropy passwords directly into your clipboard.
+- **Hardware Media & Audio Output Switching**: Switch dynamically between Bluetooth headphones and system speakers (`switch_audio_output`).
+
+---
+
+## 🚀 Beginner-Friendly Setup Guide
+
+### 🪟 Windows Setup (Windows 10 / 11)
+
+1. **Clone the repository**:
    ```powershell
-   git clone https://github.com/your-username/victor-ai.git
-   cd victor-ai
+   git clone https://github.com/Little-Sufi/victor.git
+   cd victor
    ```
 
-2. **Create and activate a virtual environment**
+2. **Run the automated Windows installer**:
    ```powershell
-   python -m venv .venv
-   .venv\Scripts\Activate.ps1
+   powershell -ExecutionPolicy Bypass -File .\install.ps1
    ```
+   *This automatically sets up Python virtual environment `.venv`, installs all dependencies, installs Node.js packages, and creates `.env`.*
 
-3. **Install dependencies**
+3. **Add your Gemini API Key**:
+   Open `.env` in Notepad or any editor:
+   ```env
+   GEMINI_API_KEY=your_actual_gemini_api_key_here
+   VICTOR_VOICE=Charon
+   ```
+   *(Get your free key from [Google AI Studio](https://aistudio.google.com/app/apikey))*.
+
+4. **Launch VICTOR**:
+   Double-click `start.bat` or run:
    ```powershell
-   pip install -r requirements.txt
-   ```
-
-4. **Download AI Models (optional but recommended)**
-   - **LLaMA/LLaVA**: Install Ollama (https://ollama.com) and pull models
-     ```powershell
-     ollama pull llava
-     ollama pull mistral
-     ```
-   - **YOLOv8 for vision**: Downloads automatically on first run
-   - **Whisper for STT**: Downloads automatically on first run
-
-5. **Run VICTOR**
-   ```powershell
-   python main.py
-   ```
-
-6. **Install as Windows Startup (optional)**
-   ```powershell
-   python install_startup_simple.py
+   .\start.bat
    ```
 
 ---
 
-### 🐧 Linux (Debian/Ubuntu) Installation
+### 🐧 Linux Setup (Ubuntu / Debian / Fedora / Arch)
 
-1. **Clone or download the repository**
+1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/victor-ai.git
-   cd victor-ai
+   git clone https://github.com/Little-Sufi/victor.git
+   cd victor
    ```
 
-2. **Install system dependencies**
+2. **Run the Linux installer**:
    ```bash
-   sudo apt update
-   sudo apt install -y python3 python3-pip python3-venv \
-     portaudio19-dev scrot xdotool
+   chmod +x install.sh
+   ./install.sh
    ```
 
-3. **Create and activate a virtual environment**
+3. **Configure your API Key**:
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
+   cp .env.example .env
+   nano .env
    ```
+   Add your `GEMINI_API_KEY`.
 
-4. **Install Python dependencies**
+4. **Launch VICTOR**:
    ```bash
-   pip install -r requirements.txt
-   ```
-
-5. **Download AI Models (optional but recommended)**
-   - **LLaMA/LLaVA**: Install Ollama (https://ollama.com) and pull models
-     ```bash
-     ollama pull llava
-     ollama pull mistral
-     ```
-   - **YOLOv8/Whisper**: Download automatically on first run
-
-6. **Run VICTOR**
-   ```bash
-   python3 main.py
+   ./.venv/bin/python main.py
    ```
 
 ---
 
-## 🎯 Usage
+## 🔒 Security & Safe Sharing
 
-### Basic Interaction
-
-- **Wake Victor**: Say "Hey Victor"
-- **Speak to Victor**: Click the orb or wake him up
-- **Background Mode**: Say "Go to background" or use tray menu
-- **Show Victor**: Say "Hey Victor" or use tray menu
-- **Quit**: Right-click orb → Shutdown VICTOR
-
-### Available Skills
-
-1. **System Control**: Launch apps, control volume, media keys, shutdown/reboot/sleep, type text, press keys, click mouse
-2. **File Manager**: Browse, read, write, copy, move, delete files and directories
-3. **Browser**: Open URLs, search the web
-4. **Code Executor**: Run Python code safely in sandbox
-5. **Cooking**: Recipes, measurement conversions, kitchen timers, cooking tips
-6. **Storytelling**: Tell stories, create characters, build worlds
-7. **System Diagnostics**: Full system diagnostics, permission checks, process listing, network status
-8. **Penetration Testing**: Ethical security testing tools (port scanning, network discovery, WHOIS, DNS, HTTP headers) - **ETHICAL USE ONLY**
-9. **Vision**: Object detection, image analysis (with LLaVA)
-10. **Memory**: Remembers your conversations, preferences, and tasks
+- **Zero Secret Leaks**: The `.gitignore` file strictly protects `.env`, `*.log`, `node_modules/`, `tasks/`, and temporary caches.
+- **Never commit `.env`**: Users who clone this repository will supply their own API keys via `.env.example`.
 
 ---
 
-## ⚙️ Configuration
+## 👤 Credits
 
-Edit `config/settings.yaml` to customize:
-- Agent name (default: VICTOR)
-- Voice gender (male/female)
-- Wake word (default: "Hey Victor")
-- AI models
-- And more!
-
----
-
-## 🔒 Privacy & Security
-
-- **100% Local**: All processing happens on your machine
-- **No Data Sent**: Nothing is sent to any external servers
-- **Sandboxed Code Execution**: Python code runs in a secure sandbox
-- **Ethical Penetration Testing**: Tools include explicit warnings and require approval
-
----
-
-## 📝 License
-
-MIT License - see LICENSE file for details.
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to fork the repo and submit pull requests.
-
----
-
-## 🙏 Acknowledgments
-
-- PySide6 for the GUI
-- Ollama for local LLMs
-- Whisper for speech-to-text
-- YOLOv8 for computer vision
-- All open-source contributors!
-
----
-
-**VICTOR AI - Your Personal AI Assistant, Always Here!**
-
+- **Project Creator & Lead Architect**: **AMKC**
+- **Project Name**: **VICTOR** (*Virtual Intelligence Created To Outsmart Reality*)
+- **License**: MIT License

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>VICTOR Orb & Vision Interface</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      background: transparent !important;
+      overflow: hidden;
+      font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+      user-select: none;
+    }
+    #orb-container {
+      width: 100%;
+      height: 100%;
+      background: transparent;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 10;
+    }
+    
+    /* Top Control Ribbon */
+    #hud-ribbon {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      z-index: 1000;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .hud-btn {
+      background: rgba(10, 15, 25, 0.75);
+      border: 1px solid rgba(0, 240, 255, 0.4);
+      color: #00f0ff;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.2);
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-btn:hover {
+      background: rgba(0, 240, 255, 0.2);
+      border-color: #00f0ff;
+      box-shadow: 0 0 16px rgba(0, 240, 255, 0.5);
+    }
+    .hud-btn.active {
+      background: rgba(0, 240, 255, 0.3);
+      border-color: #00f0ff;
+      box-shadow: 0 0 20px #00f0ff;
+    }
+
+    /* Floating Camera Vision HUD */
+    #camera-hud {
+      position: absolute;
+      bottom: 85px;
+      right: 20px;
+      width: 220px;
+      height: 165px;
+      background: rgba(8, 12, 20, 0.88);
+      border: 1px solid rgba(0, 240, 255, 0.45);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.7), 0 0 20px rgba(0, 240, 255, 0.25);
+      backdrop-filter: blur(12px);
+      z-index: 950;
+      display: none;
+      flex-direction: column;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    #camera-hud.visible {
+      display: flex;
+    }
+    #camera-hud-header {
+      padding: 6px 10px;
+      background: rgba(0, 240, 255, 0.1);
+      border-bottom: 1px solid rgba(0, 240, 255, 0.2);
+      font-size: 11px;
+      font-weight: 700;
+      color: #00f0ff;
+      letter-spacing: 0.5px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    #camera-view-container {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    #webcam-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1); /* Mirror view */
+    }
+    #gesture-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      transform: scaleX(-1);
+    }
+
+    /* Detected Gesture Notification Pill */
+    #gesture-badge {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      z-index: 1000;
+      background: rgba(10, 15, 25, 0.85);
+      border: 1px solid rgba(48, 209, 88, 0.5);
+      color: #30d158;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 0 15px rgba(48, 209, 88, 0.3);
+      backdrop-filter: blur(8px);
+      display: none;
+      animation: fadeInOut 2.5s forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translateY(-8px); }
+      15% { opacity: 1; transform: translateY(0); }
+      80% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+
+    /* Central HUD Subtitle */
+    #subtitle {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255, 255, 255, 0.95);
+      font-size: 14px;
+      font-weight: 500;
+      background: rgba(10, 14, 24, 0.88);
+      border: 1px solid rgba(0, 240, 255, 0.35);
+      border-radius: 20px;
+      padding: 10px 22px;
+      box-shadow: 0 6px 24px rgba(0,0,0,0.6), 0 0 15px rgba(0, 240, 255, 0.2);
+      text-align: center;
+      max-width: 82%;
+      word-wrap: break-word;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <!-- Gesture Badge -->
+  <div id="gesture-badge">🖐️ Gesture Detected</div>
+
+  <!-- Top Ribbon -->
+  <div id="hud-ribbon">
+    <button id="camera-toggle-btn" class="hud-btn" title="Toggle Gesture & Camera Vision">
+      <span>📷</span> Vision HUD
+    </button>
+  </div>
+
+  <!-- Three.js Orb Canvas -->
+  <div id="orb-container"></div>
+
+  <!-- Floating Camera Vision HUD -->
+  <div id="camera-hud">
+    <div id="camera-hud-header">
+      <span>VISION SENSOR // LIVE</span>
+      <span id="camera-status" style="font-size: 9px; opacity: 0.8;">STANDBY</span>
+    </div>
+    <div id="camera-view-container">
+      <video id="webcam-video" autoplay playsinline muted></video>
+      <canvas id="gesture-canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- Subtitle Text -->
+  <div id="subtitle">VICTOR Online<br>🎤 Listening — speak freely</div>
+
+  <script type="module">
+    import './orb.js';
+    import { VictorGestureController } from './gestures.js';
+
+    // 1. Initialize 3D Holographic Orb
+    window.initOrb('orb-container');
+
+    window.setSubtitle = function(text) {
+      document.getElementById('subtitle').innerHTML = text;
+    };
+    
+    window.setOrbStatus = function(status) {
+      if (window.victorOrb) {
+        window.victorOrb.setStatus(status);
+      }
+    };
+
+    // 2. Gesture Controller & Camera Vision Setup
+    const cameraHud = document.getElementById('camera-hud');
+    const cameraToggleBtn = document.getElementById('camera-toggle-btn');
+    const webcamVideo = document.getElementById('webcam-video');
+    const gestureCanvas = document.getElementById('gesture-canvas');
+    const cameraStatus = document.getElementById('camera-status');
+    const gestureBadge = document.getElementById('gesture-badge');
+
+    function showGestureBadge(label) {
+      gestureBadge.textContent = label;
+      gestureBadge.style.display = 'block';
+      // Reset CSS animation
+      gestureBadge.style.animation = 'none';
+      gestureBadge.offsetHeight; /* trigger reflow */
+      gestureBadge.style.animation = 'fadeInOut 2.5s forwards';
+    }
+
+    const gestureController = new VictorGestureController({
+      videoElement: webcamVideo,
+      canvasElement: gestureCanvas,
+      onGesture: (g) => {
+        showGestureBadge(g.label);
+        console.log('[VICTOR] Hand Gesture:', g.name);
+      },
+      onStatus: (status) => {
+        cameraStatus.textContent = status.toUpperCase();
+      }
+    });
+
+    cameraToggleBtn.addEventListener('click', async () => {
+      if (gestureController.isActive) {
+        gestureController.stop();
+        cameraHud.classList.remove('visible');
+        cameraToggleBtn.classList.remove('active');
+      } else {
+        cameraHud.classList.add('visible');
+        cameraToggleBtn.classList.add('active');
+        await gestureController.start();
+      }
+    });
+  </script>
+</body>
+</html>

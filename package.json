@@ -1,0 +1,32 @@
+{
+  "name": "victor-core",
+  "version": "2.0.0",
+  "description": "VICTOR - Advanced Autonomous AI Assistant Host Engine",
+  "main": "services/victor_node_service.js",
+  "scripts": {
+    "start": "node services/victor_node_service.js",
+    "test-camera": "node -e \"console.log('Testing node modules...')\"",
+    "build-web": "cd interface/web && npm run build"
+  },
+  "dependencies": {
+    "@google/genai": "^2.27.0",
+    "chokidar": "^4.0.3",
+    "dotenv": "^16.4.7",
+    "node-notifier": "^10.0.1",
+    "playwright": "^1.49.1",
+    "say": "^0.16.0",
+    "screenshot-desktop": "^1.15.1",
+    "systeminformation": "^5.23.5",
+    "ws": "^8.18.0"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "victor",
+    "gemini",
+    "vision",
+    "automation"
+  ],
+  "author": "VICTOR Team",
+  "license": "MIT"
+}

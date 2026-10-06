@@ -7,11 +7,11 @@ strScriptDir = CreateObject("Scripting.FileSystemObject").GetParentFolderName(WS
 WshShell.CurrentDirectory = strScriptDir
 
 ' Use the venv Python if available, otherwise fall back to system Python
-strVenvPython = strScriptDir & "\.venv\Scripts\pythonw.exe"
+strVenvPython = strScriptDir & "\.venv\Scripts\python.exe"
 Set fso = CreateObject("Scripting.FileSystemObject")
 
 If fso.FileExists(strVenvPython) Then
     WshShell.Run """" & strVenvPython & """ main.py", 0, False
 Else
-    WshShell.Run "pythonw.exe main.py", 0, False
+    WshShell.Run "python.exe main.py", 0, False
 End If

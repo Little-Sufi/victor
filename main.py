@@ -1,70 +1,126 @@
-
 #!/usr/bin/env python3
 """
 Victor - Main Entry Point
 Run this file to start VICTOR.
 
 Usage:
-    python main.py              # Start with GUI
+    python main.py              # Start with GUI Orb
     python main.py --cli        # Start in CLI mode
-    python main.py --voice      # Start with voice active
-    python main.py --diagnose   # Run diagnostics
-
-Prerequisites:
-    1. Install Ollama: https://ollama.com
-    2. Pull models: ollama pull llama3.2 llava codellama phi3
-    3. Install Python deps: pip install -r requirements.txt
 """
+import os
 import sys
 import argparse
-import json
-import os
 import tempfile
 import time
 
-# Single-instance lock
-LOCK_FILE = os.path.join(tempfile.gettempdir(), "victor_prime.lock")
+try:
+    import msvcrt
+except ImportError:
+    msvcrt = None
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
 
-def is_already_running():
-    """Check if Victor is already running by checking lock file."""
-    try:
-        if os.path.exists(LOCK_FILE):
-            # Check if process is actually still running
+class TeeLogger(object):
+    def __init__(self, *streams):
+        self.streams = [s for s in streams if s is not None]
+    def write(self, data):
+        for s in self.streams:
             try:
-                with open(LOCK_FILE, 'r') as f:
-                    pid = f.read().strip()
-                if pid:
-                    import psutil
-                    try:
-                        proc = psutil.Process(int(pid))
-                        if proc.is_running() and 'python' in proc.name().lower():
-                            return True
-                    except:
-                        pass
-            except:
+                s.write(data)
+                s.flush()
+            except Exception:
                 pass
-        return False
-    except:
-        return False
+    def writelines(self, datas):
+        for s in self.streams:
+            try:
+                s.writelines(datas)
+                s.flush()
+            except Exception:
+                pass
+    def flush(self):
+        for s in self.streams:
+            try:
+                s.flush()
+            except Exception:
+                pass
+    def __getattr__(self, attr):
+        if self.streams:
+            return getattr(self.streams[0], attr)
+        return None
 
+log_path = os.path.join(os.path.dirname(__file__), "victor_error.log")
+try:
+    # Use append mode so we keep execution history
+    log_file = open(log_path, "a", encoding="utf-8")
+    sys.stdout = TeeLogger(sys.__stdout__, log_file)
+    sys.stderr = TeeLogger(sys.__stderr__, log_file)
+    print(f"\n==================================================")
+    print(f"   VICTOR Session: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"==================================================")
+except Exception:
+    pass
 
-def create_lock_file():
-    """Create lock file with current PID."""
+def attach_to_default_desktop():
+    """Attaches current thread to the interactive 'Default' desktop on WinSta0 so GUI and screen capture are always live."""
     try:
-        with open(LOCK_FILE, 'w') as f:
-            f.write(str(os.getpid()))
-    except:
+        import ctypes
+        # Set Windows process DPI awareness to guarantee 1:1 physical pixel alignment
+        try:
+            ctypes.windll.shcore.SetProcessDpiAwareness(2)
+        except Exception:
+            try:
+                ctypes.windll.user32.SetProcessDPIAware()
+            except Exception:
+                pass
+
+        user32 = ctypes.windll.user32
+        GENERIC_ALL = 0x10000000
+        hdesk = user32.OpenDesktopW("Default", 0, False, GENERIC_ALL)
+        if hdesk:
+            user32.SetThreadDesktop(hdesk)
+            return hdesk
+    except Exception:
         pass
+    return None
 
+attach_to_default_desktop()
 
-def remove_lock_file():
-    """Remove lock file on exit."""
+# Single-instance kernel lock
+_lock_file_handle = None
+
+def acquire_instance_lock():
+    """Acquires an exclusive OS-level kernel file lock."""
+    global _lock_file_handle
+    lock_path = os.path.join(tempfile.gettempdir(), "victor_prime.lock")
     try:
-        if os.path.exists(LOCK_FILE):
-            os.remove(LOCK_FILE)
-    except:
-        pass
+        _lock_file_handle = open(lock_path, "w")
+        if msvcrt:
+            msvcrt.locking(_lock_file_handle.fileno(), msvcrt.LK_NBLCK, 1)
+        _lock_file_handle.write(str(os.getpid()))
+        _lock_file_handle.flush()
+        return True
+    except (IOError, OSError):
+        return False
+
+def release_instance_lock():
+    """Releases the OS-level lock on exit."""
+    global _lock_file_handle
+    if _lock_file_handle:
+        try:
+            if msvcrt:
+                _lock_file_handle.seek(0)
+                msvcrt.locking(_lock_file_handle.fileno(), msvcrt.LK_UNLCK, 1)
+        except Exception:
+            pass
+        try:
+            _lock_file_handle.close()
+        except Exception:
+            pass
+        _lock_file_handle = None
 
 
 def run_gui():
@@ -73,111 +129,82 @@ def run_gui():
     main()
 
 
-def run_cli():
-    """Run in command-line mode."""
-    from core.victor_core import VictorCore
+def run_cli(provider: str = "gemini"):
+    """Run in command-line mode based on resolved provider tier."""
+    import asyncio
 
-    print("\n" + "="*60)
-    print("   Victor Command Line Interface")
-    print("   Type 'exit' to quit, 'voice' to toggle voice mode")
-    print("="*60 + "\n")
+    if provider == "openai":
+        from core.openai_agent import VictorOpenAIAgent
+        agent = VictorOpenAIAgent()
+        asyncio.run(agent.run())
+    elif provider == "ollama":
+        from core.ollama_agent import VictorOllamaAgent
+        agent = VictorOllamaAgent()
+        asyncio.run(agent.run())
+    else:
+        # Default Tier 1: Gemini Live API
+        from core.gemini_live import VictorLiveAgent
+        print("\n" + "="*60)
+        print("   VICTOR Live - Powered by Gemini Live API (Tier 1)")
+        print("   Press Ctrl+C to quit")
+        print("="*60 + "\n")
 
-    victor = VictorCore()
-
-    # Optional: start voice
-    victor.start_voice_mode()
-
-    while True:
+        agent = VictorLiveAgent()
         try:
-            query = input("\nYou > ").strip()
-
-            if query.lower() in ['exit', 'quit', 'bye']:
-                victor.shutdown()
-                break
-
-            if query.lower() == 'voice':
-                if victor.state.listening:
-                    victor.stop_voice_mode()
-                    print("Voice mode disabled")
-                else:
-                    victor.start_voice_mode()
-                    print("Voice mode enabled - say 'Hey VICTOR'")
-                continue
-
-            if query.lower() == 'status':
-                status = victor.get_status()
-                print(f"\nStatus: {json.dumps(status, indent=2)}")
-                continue
-
-            if query.lower() == 'diagnose':
-                print(victor.self_diagnose())
-                continue
-
-            if not query:
-                continue
-
-            response = victor.process_command(query)
-            print(f"\nVICTOR > {response}")
-
-            # Optional TTS
-            victor.speak(response)
-
+            asyncio.run(agent.run())
         except KeyboardInterrupt:
             print("\n\nShutting down...")
-            victor.shutdown()
-            break
-        except Exception as e:
-            print(f"Error: {e}")
-
-
-def run_diagnose():
-    """Run system diagnostics."""
-    from core.victor_core import VictorCore
-    victor = VictorCore()
-    print(victor.self_diagnose())
-    victor.shutdown()
+            agent.is_running = False
+            agent.stop_audio()
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Victor - Local AI Assistant")
+    from core.provider_manager import get_active_provider, get_provider_status
+    provider = get_active_provider()
+    status = get_provider_status()
+
+    # If no provider is available and user is missing all keys/services:
+    if not status["tier1_gemini"]["configured"] and not status["tier2_openai"]["configured"] and not status["tier3_ollama"]["configured"]:
+        from interface.api_setup import get_api_key
+        new_key = get_api_key()
+        if new_key:
+            with open(".env", "a") as f:
+                f.write(f'\nGEMINI_API_KEY="{new_key}"\n')
+            os.environ["GEMINI_API_KEY"] = new_key
+            provider = "gemini"
+        else:
+            print("[Victor] No Gemini/OpenAI API key configured and Ollama not running.")
+            sys.exit(0)
+
+    parser = argparse.ArgumentParser(description="Victor - Autonomous AI Assistant")
     parser.add_argument('--cli', action='store_true', help='Run in CLI mode')
-    parser.add_argument('--voice', action='store_true', help='Start with voice active')
-    parser.add_argument('--diagnose', action='store_true', help='Run diagnostics')
+    parser.add_argument('--provider', choices=['gemini', 'openai', 'ollama'], default=None, help='Force specific provider')
 
     args = parser.parse_args()
+    if args.provider:
+        provider = args.provider
 
-    # Diagnose doesn't need single-instance check
-    if args.diagnose:
-        run_diagnose()
+    # Check kernel lock to guarantee strictly one instance
+    if not acquire_instance_lock():
+        print("[Victor] Another instance is already running. Exiting.")
         return
 
-    # Check if already running
-    if is_already_running():
-        print("Victor is already running! Only one instance allowed.")
-        return
-
-    # Create lock file
-    create_lock_file()
-
-    # Ensure lock file is removed on exit
     import atexit
-    atexit.register(remove_lock_file)
+    atexit.register(release_instance_lock)
 
     try:
-        if args.cli:
-            run_cli()
+        if args.cli or provider in ("openai", "ollama"):
+            run_cli(provider=provider)
         else:
             try:
                 run_gui()
             except ImportError as e:
                 print(f"GUI not available: {e}")
                 print("Falling back to CLI mode...")
-                run_cli()
+                run_cli(provider=provider)
     finally:
-        remove_lock_file()
+        release_instance_lock()
 
 
 if __name__ == "__main__":
     main()
-
-
