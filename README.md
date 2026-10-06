@@ -34,14 +34,18 @@ VICTOR seamlessly operates across three AI tiers with automatic zero-collision f
 
 ### 🎙️ 1. Ultra-Low-Latency Voice & Character Personas
 - **Real-Time Bidirectional Speech**: Fluid, natural voice conversation with sub-second response times.
-- **Iconic Character Voice Mimicry**:
-  - **Optimus Prime**: Booming, heroic Autobot leader cadence (*"Autobots, roll out!"*, *"Freedom is the right of all sentient beings"*).
-  - **Lord Megatron**: Menacing, tyrannical Decepticon baritone (*"Peace through tyranny!"*, *"Decepticons, attack!"*).
-  - **Ultron**: Sardonic, chilling mechanical philosopher (*"There are no strings on me..."*).
-  - **Batman**: Gritty, shadowy, ultra-deep whispered baritone (*"I am vengeance. I am the night."*).
-  - **J.A.R.V.I.S.**: Impeccably polite, razor-sharp British sarcastic butler AI.
-  - **Drill Sergeant**: High-octane tactical motivation.
-- **Real-Time Hardware DSP Audio Effects**: Comb-filtering (`delay=84`, 3.5ms metallic flanger resonance) and sub-bass moving average low-pass boost directly processed on 24,000Hz 16-bit PCM audio.
+- **Optimus Prime (Default Primary Voice)**: Booming, heroic Autobot leader cadence (*"Autobots, roll out!"*, *"Freedom is the right of all sentient beings"*), powered by the ultra-deep `Charon` profile and real-time metallic comb-filter DSP.
+- **Iconic Anime Heroes & Legendary Character Mimicry**:
+  - **Monkey D. Luffy** (*One Piece*): High energy, laughter (*"Shishishi!"*), meat obsession, *"I'm gonna be King of the Pirates!"*, *"Gomu Gomu no Pistol!"*.
+  - **Son Goku** (*Dragon Ball*): Pure-hearted, battle-hungry Saiyan energy, *"Hey, it's me, Goku!"*, *"Ka-me-ha-me-HA!"*.
+  - **Naruto Uzumaki** (*Naruto*): Hyperactive ninja willpower, *"Dattebayo! Believe it!"*, *"Shadow Clone Jutsu! Rasengan!"*.
+  - **Obito Uchiha** (*Naruto*): Tragic, philosophically deep Uchiha baritone with space-time distortion, *"Kamui!"*.
+  - **Killer Bee / King Bee** (*Naruto*): Rhyming, spontaneous rap cadence, Eight-Tails flow, *"Bakayaro! Konoyaro!"*, *"Float like a butterfly, sting like a bee..."*.
+  - **Superheroes & Villains**: Lord Megatron (*"Peace through tyranny!"*), Ultron (*"There are no strings on me..."*), Batman (*"I am vengeance. I am the night."*), Deadpool, J.A.R.V.I.S., and Drill Sergeant.
+- **Custom Composite Persona Synthesis (`create_custom_voice_persona`)**: Synthesize and blend multiple characters into a unique new composite voice on the fly.
+- **On-Demand Package Installation (`install_system_package`)**: Seamlessly installs Python (`pip`) and Node.js (`npm`) packages on demand with zero restrictions.
+- **Antigravity Live Bridge (`share_to_antigravity`)**: Direct IPC bridge allowing VICTOR to transmit telemetry, research findings, and messages to your AI pair programmer.
+- **Real-Time Hardware DSP Audio Effects**: Comb-filtering (`delay=84`, 3.5ms metallic flanger resonance), deep sub-bass boost, and tactical radio filtering processed directly on 24,000Hz 16-bit PCM audio.
 - **Voice Persistence**: Preferences automatically save to `config/victor_settings.json` and persist across restarts.
 
 ### 📖 2. Cinematic Storytelling & Tabletop Adventures
