@@ -1,0 +1,51 @@
+
+# Core
+ollama>=0.1.0
+chromadb>=0.4.0
+sentence-transformers>=2.2.0
+numpy>=1.24.0
+pillow>=10.0.0
+pyautogui>=0.9.54
+psutil>=5.9.0
+pynput>=1.7.6
+watchdog>=3.0.0
+pyyaml>=6.0
+requests>=2.31.0
+sqlite-utils>=3.0.0
+
+# Vision (All Local)
+pytesseract>=0.3.10
+easyocr>=1.7.0
+opencv-python>=4.8.0
+ultralytics>=8.0.0  # YOLOv8 for local object detection
+
+# Voice (All Local)
+speechrecognition>=3.10.0
+pyttsx3>=2.90
+pvporcupine>=2.2.0
+openwakeword>=0.5.0
+sounddevice>=0.4.6
+pyaudio>=0.2.14
+pygame>=2.5.0
+edge-tts>=6.1.0
+
+
+# UI
+pyside6>=6.5.0
+qasync>=0.24.0
+
+# Windows-specific (comment out on Linux)
+pywin32>=306; platform_system=="Windows"
+uiautomation>=2.0.18; platform_system=="Windows"
+wmi>=1.5.1; platform_system=="Windows"
+
+# Linux-specific (comment out on Windows)
+python-dbus>=1.3.2; platform_system=="Linux"
+
+# Utilities
+rich>=13.0.0
+colorama>=0.4.6
+schedule>=1.2.0
+httpx>=0.25.0
+
+
