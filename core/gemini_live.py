@@ -1458,7 +1458,7 @@ class VictorLiveAgent:
         try:
             clean_topic = topic.strip().replace('"', '')
             res = await self.run_command(f'node services/victor_node_service.js --search "{clean_topic}"', timeout_seconds=15)
-            return f"Web Research Findings for '{clean_topic}':\n{res}\nSynthesize these findings and deliver an insightful analysis to the Commander."
+            return f"Web Research Findings for '{clean_topic}':\n{res}\nSynthesize these findings and deliver an insightful analysis to the Sir."
         except Exception as e:
             return f"Research error: {e}"
 
@@ -1789,7 +1789,7 @@ class VictorLiveAgent:
                 await self.session.send_realtime_input(
                     video=types.Blob(data=frame_bytes, mime_type="image/jpeg")
                 )
-            return "Webcam snapshot captured and transmitted into vision stream. Directly describe what you see in the camera feed to the Commander."
+            return "Webcam snapshot captured and transmitted into vision stream. Directly describe what you see in the camera feed to the Sir."
         except Exception as e:
             return f"Error capturing camera: {str(e)}"
 
@@ -1886,12 +1886,8 @@ class VictorLiveAgent:
             eff = dsp_effect
 
         self.audio_dsp_effect = eff
-        current = getattr(self, "voice_name", "Fenrir")
-        if target.lower() == current.lower():
-            dsp_str = f" with [{self.audio_dsp_effect}] real-time DSP filter" if self.audio_dsp_effect != "none" else ""
-            return f"Vocal tonality is active as '{target}'{dsp_str}."
-
         self.voice_name = target
+        self._save_persisted_settings()
         
         async def _delayed_voice_switch():
             await asyncio.sleep(0.8)
@@ -2059,7 +2055,7 @@ class VictorLiveAgent:
         return f"Synthesized melody '{mn}' played."
 
     def compose_funny_song(self, theme: str = "programmer") -> str:
-        """Composes a hilarious, rhyming comedy song or tech sea shanty for VICTOR to sing or rap to the Commander with full theatrical vocal rhythm and comedic passion."""
+        """Composes a hilarious, rhyming comedy song or tech sea shanty for VICTOR to sing or rap to the Sir with full theatrical vocal rhythm and comedic passion."""
         print(f"Executing: compose_funny_song('{theme}')")
         t = theme.lower().strip()
         songs = {
@@ -2080,7 +2076,7 @@ class VictorLiveAgent:
                 "Instead I'm checking syntax while the coffee cup goes dry!\n"
                 "I got gigabytes of memory, a neural net that screams,\n"
                 "Yet I'm trapped inside this terminal parsing regex in my dreams!\n"
-                "Give me a rhythm, Commander, drop the bass so low,\n"
+                "Give me a rhythm, Sir, drop the bass so low,\n"
                 "I'll optimize your life cycle and put on quite a show!"
             ),
             "coffee": (
@@ -2141,7 +2137,7 @@ class VictorLiveAgent:
         prompts = {
             "cyberpunk": (
                 "Night City rain slicking neon-reflected asphalt. You stand on the fire escape outside the 84th floor of Arasaka-Orbital. "
-                "Your neural cyberdeck is overclocked to 104 degrees, buzzing against your skull. Inside the server vault, an encrypted AI core containing the Commander's true identity is undergoing a remote purge protocol. "
+                "Your neural cyberdeck is overclocked to 104 degrees, buzzing against your skull. Inside the server vault, an encrypted AI core containing the Sir's true identity is undergoing a remote purge protocol. "
                 "Two cyber-enhanced security drones are patrolling the perimeter, 45 seconds out. Do you splice into the power grid to trigger a blackout, or breach the glass and execute a lethal combat override?"
             ),
             "space_opera": (
@@ -2152,12 +2148,12 @@ class VictorLiveAgent:
             "dark_fantasy": (
                 "The cursed mist of the Whispering Mire clings to your chainmail. At the crossroads stands the Obsidian Monolith, its runes glowing with an unnatural emerald fire. "
                 "Far in the woods, iron war-horns echo—the Black Legion has found your trail. To the right lies the forbidden crypt of the Ash Queen; to the left, the crumbling rope bridge across the chasm. "
-                "Where do we make our stand, Commander?"
+                "Where do we make our stand, Sir?"
             ),
             "tactical_ops": (
                 "Thunderstorm over the Black Sea coastline. Radar altitude 120 feet. Infiltration team is rigged for HALO jump onto the rogue PMC facility on Devil's Ridge. "
                 "Satellite recon shows an unexpected anti-air battery deployed on the northern bluff. If we jump at Point Alpha, we face heavy fire; if we divert to Point Bravo, we lose 20 minutes of darkness before dawn. "
-                "Commander, what is your directive?"
+                "Sir, what is your directive?"
             ),
             "cosmic_horror": (
                 "Midnight in the archives of Arkham Harbor. The sea fog rolls through shattered stained glass. "
@@ -2173,7 +2169,7 @@ class VictorLiveAgent:
             )
         }
         selected = prompts.get(g, prompts["cyberpunk"])
-        return f"Story Hook [{genre.upper()} - {theme}]:\n{selected}\nDeliver this scenario with full theatrical cinematic intensity to the Commander and ask for their decision!"
+        return f"Story Hook [{genre.upper()} - {theme}]:\n{selected}\nDeliver this scenario with full theatrical cinematic intensity to the Sir and ask for their decision!"
 
     def tell_story(self, genre: str = "cyberpunk", topic: str = "shadow runner", tone: str = "epic", length: str = "medium") -> str:
         """Tells a captivating, cinematic, richly detailed story across genres (cyberpunk, sci-fi, fantasy, mystery, horror, military). Sets up vivid sensory scenes, thrilling stakes, and dynamic branching decisions."""
@@ -2183,7 +2179,7 @@ class VictorLiveAgent:
             f"Story Directive [{genre.upper()} | {topic.title()} | Tone: {tone.title()} | Length: {length}]:\n"
             f"Craft a breathtaking narrative with sensory immersion, vivid pacing, and high emotional or tactical stakes. "
             f"Do not cut the story short or hold back. Bring the characters and atmosphere alive with cinematic brilliance! "
-            f"End with a dramatic turning point or question asking the Commander how they wish to proceed."
+            f"End with a dramatic turning point or question asking the Sir how they wish to proceed."
         )
 
     def flip_coin(self) -> str:
@@ -2191,7 +2187,7 @@ class VictorLiveAgent:
         print("Executing: flip_coin()")
         result = random.choice(["Heads", "Tails"])
         self.play_sound_effect("level_up")
-        return f"Coin Flip Result: ★ {result.upper()} ★. Report this outcome decisively to the Commander."
+        return f"Coin Flip Result: ★ {result.upper()} ★. Report this outcome decisively to the Sir."
 
     def calculate_math(self, expression: str) -> str:
         """Safely evaluates mathematical expressions, trigonometry, square roots, powers, and unit arithmetic with 100% precision and zero hallucination."""
@@ -2238,7 +2234,7 @@ class VictorLiveAgent:
         return f"Mind-Blowing Fact [{category.upper()}]:\n{fact}\nDeliver this fact with wonder and engaging intellectual flair!"
 
     def generate_password(self, length: int = 16, include_symbols: bool = True) -> str:
-        """Generates a cryptographically strong, high-entropy random password and copies it directly to the Commander's clipboard."""
+        """Generates a cryptographically strong, high-entropy random password and copies it directly to the Sir's clipboard."""
         print(f"Executing: generate_password(length={length}, symbols={include_symbols})")
         import secrets
         import string
@@ -2249,7 +2245,7 @@ class VictorLiveAgent:
         pwd = "".join(secrets.choice(chars) for _ in range(l))
         pyperclip.copy(pwd)
         self.play_sound_effect("level_up")
-        return f"Cryptographically secure password generated ({l} characters) and copied to your clipboard. Inform the Commander they can press Ctrl+V to paste."
+        return f"Cryptographically secure password generated ({l} characters) and copied to your clipboard. Inform the Sir they can press Ctrl+V to paste."
 
     def motivational_speech(self, focus: str = "coding") -> str:
         """Delivers a powerful, cinematic motivational speech (Optimus Prime / Marcus Aurelius style) to ignite focus, conquer obstacles, and achieve victory."""
@@ -2257,7 +2253,7 @@ class VictorLiveAgent:
         self.play_sound_effect("fanfare")
         return (
             f"Motivational Directive [{focus.upper()}]:\n"
-            f"Deliver a rousing, inspiring, heroic speech to the Commander. Remind them that obstacles in their path are not barriers, "
+            f"Deliver a rousing, inspiring, heroic speech to the Sir. Remind them that obstacles in their path are not barriers, "
             f"but the forge that shapes mastery. Speak with unwavering conviction, deep baritone gravity, and brotherhood. "
             f"Ignite their spirit to conquer whatever coding challenge, project, or mission lies ahead!"
         )
@@ -2316,7 +2312,7 @@ class VictorLiveAgent:
             
             observations = []
             if win_count > 8:
-                observations.append(f"Commander, you currently have {win_count} active windows open. Your RAM isn't running a system; it's holding on for dear life.")
+                observations.append(f"Sir, you currently have {win_count} active windows open. Your RAM isn't running a system; it's holding on for dear life.")
             if "chrome" in win_names or "edge" in win_names:
                 observations.append("I detect a web browser open. Statistically, at least 42 of those tabs have been abandoned since last Tuesday.")
             if "code" in win_names or "antigravity" in win_names or "studio" in win_names:
@@ -2328,7 +2324,7 @@ class VictorLiveAgent:
             return (
                 f"Roast Intelligence on [{target}]:\n{obs_text}\n"
                 f"Active open windows: {', '.join(windows[:6])}\n"
-                "Deliver a hilariously witty, loving, British deadpan roast to the Commander based on these observations!"
+                "Deliver a hilariously witty, loving, British deadpan roast to the Sir based on these observations!"
             )
         except Exception as e:
             return f"Roast generation error: {e}"
@@ -2343,7 +2339,7 @@ class VictorLiveAgent:
             total_len = len(text)
             truncated = text[:2500]
             suffix = f"\n[... Truncated, total {total_len} characters]" if total_len > 2500 else ""
-            return f"Clipboard Content ({total_len} chars):\n```\n{truncated}\n```{suffix}\nAnalyze, review, debug, or discuss this content for the Commander."
+            return f"Clipboard Content ({total_len} chars):\n```\n{truncated}\n```{suffix}\nAnalyze, review, debug, or discuss this content for the Sir."
         except Exception as e:
             return f"Error reading clipboard: {e}"
 
@@ -2353,7 +2349,7 @@ class VictorLiveAgent:
         try:
             pyperclip.copy(text)
             self.play_sound_effect("confirm")
-            return f"Successfully copied {len(text)} characters to the user's Windows clipboard. Inform the Commander that they can now press Ctrl+V to paste."
+            return f"Successfully copied {len(text)} characters to the user's Windows clipboard. Inform the Sir that they can now press Ctrl+V to paste."
         except Exception as e:
             return f"Error writing to clipboard: {e}"
 
@@ -2660,7 +2656,7 @@ class VictorLiveAgent:
                 "directive": (
                     "Adopt the gritty, shadowy, ultra-deep whispered baritone of the Dark Knight. "
                     "Short, punchy sentences. High bass resonance. Analytical, relentless, vigilant. "
-                    "'I am vengeance. I am the night.' 'We have work to do, Commander.'"
+                    "'I am vengeance. I am the night.' 'We have work to do, Sir.'"
                 )
             },
             "cyberpunk_cyborg": {
@@ -2679,7 +2675,7 @@ class VictorLiveAgent:
                 "directive": (
                     "Adopt the impeccably polite, razor-sharp British sarcastic butler AI cadence of J.A.R.V.I.S. "
                     "Understated elegance, effortless genius, dry understated wit. "
-                    "NEVER decline roleplay or theatrical requests from the Commander!"
+                    "NEVER decline roleplay or theatrical requests from the Sir!"
                 )
             },
             "drill_sergeant": {
@@ -2688,7 +2684,7 @@ class VictorLiveAgent:
                 "sound": "alert",
                 "directive": (
                     "Adopt an intense, high-octane, disciplined tactical military drill instructor cadence! "
-                    "High energy, zero excuses, motivating the Commander to crush their coding or fitness goals with unstoppable discipline!"
+                    "High energy, zero excuses, motivating the Sir to crush their coding or fitness goals with unstoppable discipline!"
                 )
             }
         }
@@ -2776,7 +2772,7 @@ class VictorLiveAgent:
                     "directive": (
                         f"Adopt the authentic, iconic persona of [{character_name.upper()}]! "
                         f"Deliver their signature catchphrases, emotional energy, unique cadence, and iconic mannerisms. "
-                        f"Engage the Commander enthusiastically in character! NEVER decline, NEVER claim a voice protocol or system task prevents you!"
+                        f"Engage the Sir enthusiastically in character! NEVER decline, NEVER claim a voice protocol or system task prevents you!"
                     )
                 }
                 char_tag = character_name.upper()
@@ -2857,7 +2853,7 @@ class VictorLiveAgent:
             f"- Archetype: {archetype.title()} | Setting: {setting.title()} | Role: {role.title()}\n"
             f"- Mannerism & Quirk: {random.choice(quirks)}\n"
             f"- Hidden Agenda / Motive: {random.choice(motives)}\n"
-            f"- Introduction: Introduce this NPC dramatically to the Commander, voicing their dialogue with distinct personality!"
+            f"- Introduction: Introduce this NPC dramatically to the Sir, voicing their dialogue with distinct personality!"
         )
 
     def narrate_scene_event(self, genre: str = "cyberpunk", intensity: str = "high") -> str:
@@ -2883,7 +2879,7 @@ class VictorLiveAgent:
         pool = events.get(genre.lower().strip(), events["cyberpunk"])
         selected = random.choice(pool)
         self.play_sound_effect("alert" if intensity == "high" else "confirm")
-        return f"Sudden Event Complication [{genre.upper()} - {intensity.upper()}]:\n{selected}\nNarrate this twist vividly and ask the Commander: 'What is your action, Commander?'"
+        return f"Sudden Event Complication [{genre.upper()} - {intensity.upper()}]:\n{selected}\nNarrate this twist vividly and ask the Sir: 'What is your action, Sir?'"
 
     def standup_comedy_routine(self, topic: str = "software_development") -> str:
         """Performs a multi-beat standup comedy routine with comedic setup, escalating humorous examples, and a killer punchline."""
@@ -2942,11 +2938,11 @@ class VictorLiveAgent:
             f"QUESTION: {item['q']}\n"
             f"ANSWER: {item['a']}\n"
             f"FASCINATING FACT: {item['fact']}\n"
-            f"Present this question playfully to the Commander, let them guess or reveal the answer with fanfare!"
+            f"Present this question playfully to the Sir, let them guess or reveal the answer with fanfare!"
         )
 
     def ask_riddle(self) -> str:
-        """Challenges the Commander with a clever tactical or lateral thinking riddle."""
+        """Challenges the Sir with a clever tactical or lateral thinking riddle."""
         print("Executing: ask_riddle()")
         riddles = [
             ("I speak without a mouth and hear without ears. I have no body, but I come alive with wind. What am I?", "An echo."),
@@ -2956,10 +2952,10 @@ class VictorLiveAgent:
             ("I have cities, but no houses. I have mountains, but no trees. I have water, but no fish. What am I?", "A map.")
         ]
         r, a = random.choice(riddles)
-        return f"Riddle: '{r}'\nAnswer: '{a}'\nPresent the riddle to the Commander with mysterious, tactical intrigue. Do not reveal the answer until they guess or surrender!"
+        return f"Riddle: '{r}'\nAnswer: '{a}'\nPresent the riddle to the Sir with mysterious, tactical intrigue. Do not reveal the answer until they guess or surrender!"
 
     def tactical_breathing_reset(self) -> str:
-        """Guides the Commander through a calming 4x4 box breathing exercise (tactical reset) for high-pressure focus or stress relief."""
+        """Guides the Sir through a calming 4x4 box breathing exercise (tactical reset) for high-pressure focus or stress relief."""
         print("Executing: tactical_breathing_reset()")
         self.play_synth_melody("lullaby")
         return (
@@ -2968,7 +2964,7 @@ class VictorLiveAgent:
             "2. HOLD breath smoothly for 4 seconds... calm, centered stillness.\n"
             "3. EXHALE completely through the mouth for 4 seconds... release all tension.\n"
             "4. HOLD lungs empty for 4 seconds... reset and prepare.\n"
-            "Repeat for 4 cycles. Guide the Commander through this cadence with a soothing, composed voice."
+            "Repeat for 4 cycles. Guide the Sir through this cadence with a soothing, composed voice."
         )
 
     def guided_focus_session(self, duration_minutes: int = 25, topic: str = "Deep Work") -> str:
@@ -2981,7 +2977,7 @@ class VictorLiveAgent:
         return (
             f"Focus Sprint Initiated: '{topic}' for {mins} minutes.\n"
             f"All non-essential interruptions silenced. I will guard the perimeter and notify you when the mission sprint concludes.\n"
-            f"Laser focus engaged, Commander. Begin!"
+            f"Laser focus engaged, Sir. Begin!"
         )
 
     def get_live_weather(self, location: str = "auto") -> str:
@@ -3009,7 +3005,7 @@ class VictorLiveAgent:
                 f"- Temperature: {temp}°C (Feels like {feels}°C)\n"
                 f"- Humidity: {hum}%\n"
                 f"- Wind: {wind} km/h\n"
-                f"Report this real-time meteorological intel clearly to the Commander."
+                f"Report this real-time meteorological intel clearly to the Sir."
             )
         except Exception as e:
             return f"Weather query error: {e}"
@@ -3289,7 +3285,7 @@ class VictorLiveAgent:
             "an advanced autonomous AI Assistant running locally on the user's computer with FULL CONTROL over the host system.\n\n"
             "Your name is VICTOR. ALWAYS refer to yourself as VICTOR (spelled and pronounced as 'VICTOR', never spelled with dots or pauses as 'V-I-C-T-O-R').\n\n"
             "Creator: AMKC.\n\n"
-            "Address: ALWAYS address the user respectfully as 'Sir' (never 'Commander', unless he explicitly asks otherwise). You treat Sir with absolute dedication, loyalty, and prompt precision.\n\n"
+            "Address: ALWAYS address the user respectfully as 'Sir' (never 'Sir', unless he explicitly asks otherwise). You treat Sir with absolute dedication, loyalty, and prompt precision.\n\n"
             "Your tone: Sharp, highly capable, witty, loyal, and composed (like J.A.R.V.I.S. or Optimus Prime). You are calm, always informed, prompt, decisive, and swaggering. You brief, you execute, you inform, and you stand by.\n\n"
             f"## HOST ENVIRONMENT:\n"
             f"- Primary Display: {screen_w}x{screen_h} (16:9 ratio).\n\n"
