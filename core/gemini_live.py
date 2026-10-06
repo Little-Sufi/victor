@@ -166,15 +166,22 @@ class VictorLiveAgent:
             print(f"[Victor Settings] Error saving settings: {e}")
 
     def _mic_callback(self, indata, frames, time_info, status):
-        """High-priority PortAudio callback for audio input."""
-        if not self.is_running or self.is_muted or self.is_speaking:
+        """High-priority PortAudio callback for audio input with smart echo gate and gain boost."""
+        if not self.is_running or self.is_muted:
             return
+
+        # Echo prevention safeguard: only suppress mic if speaker is actually actively outputting audio chunks
+        if self.is_speaking:
+            if hasattr(self, "audio_out_queue") and self.audio_out_queue and self.audio_out_queue.empty():
+                self.is_speaking = False
+            else:
+                return
 
         if self.loop and self.audio_in_queue and not self.loop.is_closed():
             try:
-                # Apply 3.0x digital gain boost with clipping safeguard
+                # 4.0x digital gain boost with clipping safeguard for clear reception on all mics and Bluetooth headsets
                 audio_array = np.frombuffer(indata, dtype=np.int16)
-                boosted = np.clip(audio_array.astype(np.float32) * 3.0, -32768, 32767).astype(np.int16)
+                boosted = np.clip(audio_array.astype(np.float32) * 4.0, -32768, 32767).astype(np.int16)
                 data = boosted.tobytes()
 
                 self.loop.call_soon_threadsafe(
@@ -183,6 +190,31 @@ class VictorLiveAgent:
                 )
             except Exception:
                 pass
+
+    def _ensure_mic_active(self):
+        """Ensures the PortAudio microphone stream is healthy, active, and streaming."""
+        if not self.is_running:
+            return
+        if self.mic_stream is None or not getattr(self.mic_stream, "active", False):
+            print("[Victor Live] Mic stream was inactive. Auto-recovering microphone...")
+            try:
+                if self.mic_stream:
+                    try:
+                        self.mic_stream.stop()
+                        self.mic_stream.close()
+                    except Exception:
+                        pass
+                self.mic_stream = sd.RawInputStream(
+                    samplerate=16000, 
+                    blocksize=1024, 
+                    channels=1, 
+                    dtype='int16',
+                    callback=self._mic_callback
+                )
+                self.mic_stream.start()
+                print("[Victor Live] Microphone stream revived and active.")
+            except Exception as e:
+                print(f"[Victor Live] Could not revive mic stream: {e}")
 
     def start_audio(self):
         """Initializes both input and output audio streams."""
@@ -1928,6 +1960,7 @@ class VictorLiveAgent:
         
         async def _delayed_voice_switch():
             await asyncio.sleep(0.8)
+            self.is_speaking = False
             if hasattr(self, 'stop_event') and self.stop_event:
                 self.stop_event.set()
 
@@ -3082,11 +3115,18 @@ class VictorLiveAgent:
 
     # --- STREAMING LOOPS ---
     async def _send_audio(self, session):
-        """Asynchronously streams microphone audio to Gemini continuously."""
+        """Asynchronously streams microphone audio to Gemini continuously with auto-recovery watchdog."""
         print("[Victor Live] Started sending audio from mic...")
+        self.is_speaking = False
+        self._ensure_mic_active()
         while self.is_running:
             try:
-                data = await self.audio_in_queue.get()
+                try:
+                    data = await asyncio.wait_for(self.audio_in_queue.get(), timeout=2.5)
+                except asyncio.TimeoutError:
+                    self._ensure_mic_active()
+                    continue
+
                 if data and not self.is_muted:
                     await session.send_realtime_input(
                         audio=types.Blob(data=data, mime_type="audio/pcm;rate=16000")
@@ -3557,12 +3597,20 @@ class VictorLiveAgent:
                     if self.on_subtitle_change:
                         self.on_subtitle_change("VICTOR Online\n🎤 Listening — speak freely")
                         
-                    # Flush queue on new connection
+                    self.is_speaking = False
+                    self.is_muted = False
+                    # Flush audio queues on new connection
                     while not self.audio_in_queue.empty():
                         try:
                             self.audio_in_queue.get_nowait()
                         except Exception:
                             break
+                    while not self.audio_out_queue.empty():
+                        try:
+                            self.audio_out_queue.get_nowait()
+                        except Exception:
+                            break
+                    self._ensure_mic_active()
 
                     tasks = [
                         asyncio.create_task(self._send_audio(session)),
