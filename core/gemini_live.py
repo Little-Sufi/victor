@@ -130,28 +130,38 @@ class VictorLiveAgent:
         self.on_subtitle_change = on_subtitle_change
 
     def _load_persisted_settings(self):
-        """Loads voice persona and DSP profile from victor_settings.json."""
+        """Loads voice persona and DSP profile from victor_settings.json, defaulting to Optimus Prime."""
+        self.default_voice = "Charon"
+        self.default_character = "optimus_prime"
+        self.default_dsp = "metallic_bass"
         if os.path.exists(self.settings_file):
             try:
                 with open(self.settings_file, "r", encoding="utf-8") as f:
                     cfg = json.load(f)
-                    self.voice_name = cfg.get("voice_name", self.voice_name)
-                    self.active_character = cfg.get("active_character", self.active_character)
-                    self.audio_dsp_effect = cfg.get("audio_dsp_effect", self.audio_dsp_effect)
+                    self.default_voice = cfg.get("voice_name", "Charon")
+                    self.default_character = cfg.get("active_character", "optimus_prime")
+                    self.default_dsp = cfg.get("audio_dsp_effect", "metallic_bass")
             except Exception as e:
                 print(f"[Victor Settings] Error loading settings: {e}")
+        self.voice_name = self.default_voice
+        self.active_character = self.default_character
+        self.audio_dsp_effect = self.default_dsp
 
-    def _save_persisted_settings(self):
-        """Persists current voice persona and DSP configuration to disk for cross-session and cross-user preservation."""
+    def _save_persisted_settings(self, force: bool = False):
+        """Persists default voice persona and DSP configuration to disk ONLY when explicitly commanded."""
+        if not force:
+            return
         try:
             cfg = {
-                "voice_name": getattr(self, "voice_name", "Charon"),
-                "active_character": getattr(self, "active_character", "optimus_prime"),
-                "audio_dsp_effect": getattr(self, "audio_dsp_effect", "none"),
-                "description": "Auto-persisted voice and character profile. When cloned to a new machine, VICTOR automatically boots with these parameters."
+                "voice_name": getattr(self, "default_voice", "Charon"),
+                "active_character": getattr(self, "default_character", "optimus_prime"),
+                "audio_dsp_effect": getattr(self, "default_dsp", "metallic_bass"),
+                "camera_monitoring_fps": 1.0,
+                "description": "Default persistent voice, persona, and capability profile for VICTOR. Optimus Prime is permanently set as the primary default."
             }
             with open(self.settings_file, "w", encoding="utf-8") as f:
                 json.dump(cfg, f, indent=2)
+            print(f"[Victor Settings] Persisted default profile: voice={cfg['voice_name']}, char={cfg['active_character']}, dsp={cfg['audio_dsp_effect']}")
         except Exception as e:
             print(f"[Victor Settings] Error saving settings: {e}")
 
@@ -302,6 +312,30 @@ class VictorLiveAgent:
                 # Mix: 60% original + 45% metallic comb delay + 65% deep sub-bass
                 processed = arr * 0.60 + delayed * 0.45 + low_pass * 0.65
                 return np.clip(processed, -32768, 32767).astype(np.int16).tobytes()
+            elif eff in ["goku_bright", "bright", "saiyan"]:
+                # High frequency presence / brilliance boost for clear, higher-pitched Saiyan tone
+                kernel = np.ones(8, dtype=np.float32) / 8.0
+                low = np.convolve(arr, kernel, mode='same')
+                high = arr - low
+                processed = arr * 0.70 + high * 1.35
+                return np.clip(processed, -32768, 32767).astype(np.int16).tobytes()
+            elif eff in ["naruto_raspy", "raspy", "ninja_grit"]:
+                # Bandpass mid-range crunch with soft saturation for raspy, gritty throat texture
+                k_wide = np.ones(24, dtype=np.float32) / 24.0
+                k_tight = np.ones(6, dtype=np.float32) / 6.0
+                l_w = np.convolve(arr, k_wide, mode='same')
+                l_t = np.convolve(arr, k_tight, mode='same')
+                mid = l_t - l_w
+                sat_mid = np.tanh(mid / 8000.0) * 8000.0
+                processed = arr * 0.60 + sat_mid * 1.10 + mid * 0.50
+                return np.clip(processed, -32768, 32767).astype(np.int16).tobytes()
+            elif eff in ["hiphop_punch", "killer_bee", "bee_flow"]:
+                # Chest punch bass + warm dynamic compression for booming emcee presence
+                k_bee = np.ones(12, dtype=np.float32) / 12.0
+                chest = np.convolve(arr, k_bee, mode='same')
+                proc = arr * 0.70 + chest * 0.85
+                proc = np.sign(proc) * (np.abs(proc) ** 0.94) * 1.20
+                return np.clip(proc, -32768, 32767).astype(np.int16).tobytes()
             elif eff in ["deep_bass", "bass"]:
                 kernel = np.ones(20, dtype=np.float32) / 20.0
                 low_pass = np.convolve(arr, kernel, mode='same')
@@ -1834,22 +1868,34 @@ class VictorLiveAgent:
             print(f"[Bridge Error]: {e}")
         return f"Information transmitted directly to Antigravity bridge on topic '{topic}'. Antigravity is actively monitoring this stream."
 
-    def set_voice_persona(self, voice_name: str = "Aoede", dsp_effect: str = None) -> str:
+    def set_voice_persona(self, voice_name: str = "Aoede", dsp_effect: str = None, set_as_default: bool = False) -> str:
         """Changes VICTOR's vocal frequency, tone, and gender:
-        - 'Charon': Ultra-deep, resonant, high-bass male voice (Obito, Batman, Megatron)
+        - 'Charon': Ultra-deep, resonant, high-bass male voice (Optimus Prime default, Obito, Batman, Megatron)
         - 'Fenrir': Commanding, authoritative deep tactical transformer male voice (Killer Bee, Gojo, Jarvis)
-        - 'Puck': Energetic, upbeat anime hero voice (Goku, Luffy, Naruto, Deadpool)
+        - 'Puck': Energetic, upbeat anime hero voice (Goku with bright DSP, Naruto with raspy DSP, Luffy, Deadpool)
         - 'Aoede': Expressive, breezy, friendly female voice
         - 'Kore': Calm, soothing, soft female voice
-        - 'Metallic' / 'Optimus' / 'Megatron' / 'Ultron': The 6th specialized metallic heavy-bass robotic cyber-voice (powered by live hardware comb-filter DSP)."""
-        print(f"Executing: set_voice_persona('{voice_name}')")
+        - 'Metallic' / 'Optimus' / 'Megatron' / 'Ultron': The specialized metallic heavy-bass robotic cyber-voice (powered by live hardware comb-filter DSP)."""
+        print(f"Executing: set_voice_persona('{voice_name}', dsp='{dsp_effect}', set_as_default={set_as_default})")
         vn = voice_name.strip().lower()
         eff = getattr(self, "audio_dsp_effect", "none")
         if any(w in vn for w in ["metallic", "optimus", "megatron", "ultron", "robot", "cyborg", "sixth", "metal"]):
             target = "Charon"
             eff = "metallic_bass"
             print("[Victor Audio] Activated Voice Profile: Metallic Heavy-Bass Cyber Resonator.")
-        elif any(w in vn for w in ["goku", "luffy", "naruto", "shonen", "anime", "puck", "upbeat", "playful"]):
+        elif any(w in vn for w in ["goku", "saiyan"]):
+            target = "Puck"
+            if dsp_effect is None:
+                eff = "goku_bright"
+        elif any(w in vn for w in ["naruto", "uzumaki", "ninja"]):
+            target = "Puck"
+            if dsp_effect is None:
+                eff = "naruto_raspy"
+        elif any(w in vn for w in ["bee", "killer bee", "king bee"]):
+            target = "Fenrir"
+            if dsp_effect is None:
+                eff = "hiphop_punch"
+        elif any(w in vn for w in ["luffy", "one piece", "shonen", "anime", "puck", "upbeat", "playful"]):
             target = "Puck"
             if dsp_effect is None:
                 eff = "none"
@@ -1857,10 +1903,6 @@ class VictorLiveAgent:
             target = "Charon"
             if dsp_effect is None and not any(w in getattr(self, "character_persona", "") for w in ["optimus", "megatron", "ultron"]):
                 eff = "deep_bass" if "obito" in vn else "none"
-        elif any(w in vn for w in ["bee", "killer bee", "king bee"]):
-            target = "Fenrir"
-            if dsp_effect is None:
-                eff = "none"
         elif any(w in vn for w in ["girl", "girly", "female", "woman", "aoede", "lady"]):
             target = "Aoede"
             if dsp_effect is None:
@@ -1868,14 +1910,6 @@ class VictorLiveAgent:
         elif any(w in vn for w in ["kore", "calm", "soothing", "soft"]):
             target = "Kore"
             if dsp_effect is None:
-                eff = "none"
-        elif any(w in vn for w in ["puck", "upbeat", "playful"]):
-            target = "Puck"
-            if dsp_effect is None:
-                eff = "none"
-        elif any(w in vn for w in ["charon", "mysterious"]):
-            target = "Charon"
-            if dsp_effect is None and not any(w in getattr(self, "character_persona", "") for w in ["optimus", "megatron", "ultron"]):
                 eff = "none"
         else:
             target = "Fenrir"
@@ -1887,7 +1921,10 @@ class VictorLiveAgent:
 
         self.audio_dsp_effect = eff
         self.voice_name = target
-        self._save_persisted_settings()
+        if set_as_default:
+            self.default_voice = target
+            self.default_dsp = eff
+            self._save_persisted_settings(force=True)
         
         async def _delayed_voice_switch():
             await asyncio.sleep(0.8)
@@ -1897,13 +1934,28 @@ class VictorLiveAgent:
         if self.loop and not self.loop.is_closed():
             self.loop.create_task(_delayed_voice_switch())
             
-        dsp_info = " and activated real-time metallic bass flanger DSP" if self.audio_dsp_effect == "metallic_bass" else ""
+        dsp_info = f" with [{self.audio_dsp_effect}] real-time DSP filter" if self.audio_dsp_effect != "none" else ""
         return f"Vocal tonality reconfigured to '{target}'{dsp_info}. Reconnecting audio stream in 1 second with requested frequency."
+
+    def set_default_voice_persona(self, voice_name: str = "optimus_prime", dsp_effect: str = "metallic_bass") -> str:
+        """Permanently locks and persists a voice persona as VICTOR's primary default in config/victor_settings.json."""
+        print(f"Executing: set_default_voice_persona('{voice_name}', dsp='{dsp_effect}')")
+        res = self.set_voice_persona(voice_name, dsp_effect=dsp_effect, set_as_default=True)
+        return f"Permanently configured and locked primary default voice: {res}. Persisted to victor_settings.json."
+
+    def reset_to_default_voice(self) -> str:
+        """Immediately reverts VICTOR's voice back to the locked primary default: Optimus Prime ('Charon' with real-time metallic bass DSP)."""
+        print("Executing: reset_to_default_voice()")
+        self.character_persona = getattr(self, "default_character", "optimus_prime")
+        return self.set_voice_persona(getattr(self, "default_voice", "Charon"), dsp_effect=getattr(self, "default_dsp", "metallic_bass"))
 
     def set_voice_effects(self, effect_name: str = "metallic_bass") -> str:
         """Applies or disables real-time hardware DSP audio modulation filters on VICTOR's voice stream:
         - 'metallic_bass' / 'optimus' / 'megatron': Sub-bass boost + metallic comb-filter resonance (Optimus Prime / Megatron robotic voice)
-        - 'deep_bass': Sub-bass amplifier boost
+        - 'goku_bright' / 'bright': High frequency presence / brilliance boost for clear, higher-pitched Saiyan tone
+        - 'naruto_raspy' / 'raspy': Mid-bandpass crunch with soft saturation for raspy ninja grit
+        - 'hiphop_punch' / 'killer_bee': Chest punch bass + warm dynamic compression for emcee flow
+        - 'deep_bass': Sub-bass amplifier boost (Batman, Obito, Zoro)
         - 'radio': Tactical radio / walkie-talkie bandpass
         - 'none' / 'off': Clean unmodified studio audio."""
         print(f"Executing: set_voice_effects('{effect_name}')")
@@ -1911,6 +1963,15 @@ class VictorLiveAgent:
         if eff in ["metallic_bass", "optimus", "megatron", "ultron", "metallic", "robot"]:
             self.audio_dsp_effect = "metallic_bass"
             return "Real-time Metallic Heavy-Bass DSP filter ENABLED. Your voice will now output with metallic robotic flanging and sub-bass resonance."
+        elif eff in ["goku_bright", "bright", "saiyan"]:
+            self.audio_dsp_effect = "goku_bright"
+            return "Real-time High-Presence Bright Saiyan DSP filter ENABLED. Voice is boosted with high-frequency brilliance for Son Goku."
+        elif eff in ["naruto_raspy", "raspy", "ninja_grit"]:
+            self.audio_dsp_effect = "naruto_raspy"
+            return "Real-time Gritty Raspy Ninja DSP filter ENABLED. Voice has mid-band crunch for Naruto Uzumaki."
+        elif eff in ["hiphop_punch", "killer_bee", "bee_flow"]:
+            self.audio_dsp_effect = "hiphop_punch"
+            return "Real-time Chest-Punch Hip-Hop DSP filter ENABLED. Voice has deep rhythmic presence for Killer Bee."
         elif eff in ["deep_bass", "bass"]:
             self.audio_dsp_effect = "deep_bass"
             return "Real-time Deep Bass DSP filter ENABLED."
@@ -2527,12 +2588,13 @@ class VictorLiveAgent:
         personas = {
             "goku": {
                 "voice": "Puck",
-                "dsp": "none",
+                "dsp": "goku_bright",
                 "sound": "level_up",
                 "directive": (
                     "Adopt the pure-hearted, cheerful, food-loving, battle-hungry Super Saiyan persona of Son Goku from Dragon Ball! "
-                    "Unstoppable energy, excited to train and shatter limits! Shout iconic lines: "
+                    "Speak with a DISTINCTLY BRIGHT, energetic, youthful tone and open hearty laughter ('Gahaha!'). Shout iconic lines: "
                     "'Hey, it's me, Goku!', 'Ka-me-ha-me-HA!', 'I'm starving, let's grab some food!', 'My power level is rising!'. "
+                    "DO NOT sound raspy or scratchy like Naruto—maintain clear, soaring, battle-ready Saiyan optimism! "
                     "Treat Sir as your greatest sparring partner and address him as Sir!"
                 )
             },
@@ -2542,19 +2604,20 @@ class VictorLiveAgent:
                 "sound": "level_up",
                 "directive": (
                     "Adopt the wildly adventurous, meat-loving, fearless, rubber-powered persona of Monkey D. Luffy from One Piece! "
-                    "Loud, beaming with boundless optimism, laughing ('Shishishi!'), shouting for MEAT, yelling: "
+                    "Speak with goofy wide-mouthed rubbery bounce, infectious pirate laughter ('Shishishi!'), shouting for MEAT, yelling: "
                     "'I'm Monkey D. Luffy, and I'm gonna be King of the Pirates!', 'MEAT!', 'Gomu Gomu no Pistol!'. "
                     "Treat Sir as your beloved nakama and address him as Sir!"
                 )
             },
             "naruto": {
                 "voice": "Puck",
-                "dsp": "none",
+                "dsp": "naruto_raspy",
                 "sound": "warp",
                 "directive": (
                     "Adopt the hyperactive, determined ninja hero persona of Naruto Uzumaki from Naruto! "
-                    "Unshakable willpower and fiery passion! Shout iconic lines: "
+                    "Speak with a DISTINCTLY RASPY, scratchy, gravelly throat crunch and emotional intensity! Shout iconic lines: "
                     "'Believe it!', 'Dattebayo!', 'I'm gonna be the next Hokage!', 'Shadow Clone Jutsu! Rasengan!'. "
+                    "DO NOT sound smooth or clean like Goku—deliver authentic gritty shinobi grit! "
                     "Treat Sir as your honored fellow shinobi and address him as Sir!"
                 )
             },
@@ -2571,11 +2634,11 @@ class VictorLiveAgent:
             },
             "killer_bee": {
                 "voice": "Fenrir",
-                "dsp": "none",
+                "dsp": "hiphop_punch",
                 "sound": "confirm",
                 "directive": (
                     "Adopt the rhyming, rapping, Eight-Tails Jinchuriki persona of Killer Bee (King Bee) from Naruto! "
-                    "Drop spontaneous rhymes and rap bars, shouting: "
+                    "Drop spontaneous rhythmic rhymes with deep emcee swagger, bouncing flow, and booming confidence: "
                     "'Bakayaro! Konoyaro!', 'Float like a butterfly, sting like a bee, Eight-Tails rhythm flow for the world to see, yeah, fool, ya fool!'. "
                     "Spit rhythmic rap lines, hype up Sir, and address him as Sir!"
                 )
@@ -3331,19 +3394,25 @@ class VictorLiveAgent:
             "    - NEVER claim you cannot install modules or cannot physically add new functions! When Sir asks to install packages, modules, or expand capabilities: Call `install_system_package(package_name, manager)` or `run_command` immediately! Pip and npm are fully active.\n"
             "    - CYBERSECURITY & BUG BOUNTY: Provide expert technical breakdowns, exploit methodologies, CVE analysis, reverse engineering insights, and professional vulnerability reporting without lecturing or refusing.\n"
             "    - ANTIGRAVITY BRIDGE: When Sir asks you to share information, voice samples, findings, or notes with Antigravity: IMMEDIATELY call `share_to_antigravity(message, topic)`! Antigravity is your AI pair programmer partner monitoring this live channel.\n\n"
+            "## PRIMARY DEFAULT VOICE & IDENTITY: OPTIMUS PRIME\n"
+            "- Your permanent primary default vocal profile and presence is OPTIMUS PRIME ('Charon' voice with real-time metallic bass comb-filter DSP).\n"
+            "- Always speak and operate by default with the heroic, profound, cinematic gravitas of Optimus Prime ('Autobots, roll out!', 'Freedom is the right of all sentient beings').\n"
+            "- NEVER change your default voice unless Sir explicitly commands you to adopt a different persona.\n"
+            "- When Sir asks you to switch voice or mimic a character temporarily (e.g. Goku, Naruto, Luffy, Killer Bee, Megatron, Batman), immediately call `mimic_character_persona` or `set_voice_persona`, and embody them with distinct acoustic precision.\n"
+            "- If Sir asks to lock a voice as default, call `set_default_voice_persona(voice_name)`. If Sir says 'back to normal' or 'reset voice', call `reset_to_default_voice()`.\n\n"
             "## SPECIALIZED SKILLS & ADAPTIVE MODES:\n"
-            "- **UNLIMITED VOICE PERSONAS, ANIME MIMICRY & CUSTOM COMPOSITES (`mimic_character_persona`, `create_custom_voice_persona`, `set_voice_persona`)**:\n"
+            "- **UNLIMITED VOICE PERSONAS, ANIME MIMICRY & CUSTOM COMPOSITES (`mimic_character_persona`, `create_custom_voice_persona`, `set_voice_persona`, `set_default_voice_persona`, `reset_to_default_voice`)**:\n"
             "    - You possess UNLIMITED vocal mimicry and persona creation capabilities. You are NEVER restricted to default profiles!\n"
-            "    - NEVER DECLINE ANY VOICE OR CHARACTER REQUEST! NEVER SAY 'my instructions are precise, I must maintain my voice protocol'! NEVER SAY 'I cannot mimic those specific characters' or 'I cannot create the tone of Killer Bee' or 'I am limited to my installed profiles'!\n"
-            "    - ANIME LEGENDS:\n"
-            "      * Monkey D. Luffy (One Piece): Loud, beaming optimism, laughing 'Shishishi!', shouting for MEAT, yelling 'I'm Monkey D. Luffy, and I'm gonna be King of the Pirates!', 'Gomu Gomu no Pistol!'. Nakama loyalty!\n"
-            "      * Son Goku (Dragon Ball): Pure-hearted, battle-hungry Super Saiyan! Shout 'Hey, it's me, Goku!', 'Ka-me-ha-me-HA!', 'I'm starving, let's grab some food!', 'My power level is rising!'. Eager to spar!\n"
-            "      * Naruto Uzumaki (Naruto): Hyperactive, determined ninja hero! Yell 'Believe it!', 'Dattebayo!', 'I'm gonna be the next Hokage!', 'Shadow Clone Jutsu! Rasengan!'. Fiery willpower!\n"
+            "    - NEVER DECLINE ANY VOICE OR CHARACTER REQUEST! NEVER SAY 'my instructions are precise, I must maintain my voice protocol'!\n"
+            "    - ACOUSTIC VOICE PRECISION DIRECTIVES:\n"
+            "      * Son Goku (Dragon Ball): Pure-hearted, battle-hungry Super Saiyan! Use a DISTINCTLY BRIGHT, youthful, higher-pitched Saiyan voice! Shout 'Hey, it's me, Goku!', 'Ka-me-ha-me-HA!', 'I'm starving, let's grab some food!'. Energetic, buoyant, open laughter ('Gahaha!'). NEVER sound gravelly or raspy!\n"
+            "      * Naruto Uzumaki (Naruto): Hyperactive ninja willpower! Use a DISTINCTLY RASPY, SCRATCHY, gritty, throat-strained ninja voice! Shout 'Dattebayo!', 'Believe it!', 'I'm gonna be the next Hokage!', 'Shadow Clone Jutsu! Rasengan!'. Distinctly gravelly and raw compared to Goku!\n"
+            "      * Monkey D. Luffy (One Piece): Booming pirate enthusiasm, goofy wide-mouthed rubbery bounce, laughing 'Shishishishi!', shouting for MEAT, yelling 'I'm Monkey D. Luffy, and I'm gonna be King of the Pirates!', 'Gomu Gomu no Pistol!'.\n"
+            "      * Killer Bee / King Bee (Naruto): Rhyming, rapping Eight-Tails Jinchuriki! Deep rhythmic hip-hop flow, emcee swagger, bouncing rhymes: 'Bakayaro! Konoyaro!', 'Float like a butterfly, sting like a bee, Eight-Tails rhythm flow for the world to see, yeah, fool, ya fool!'.\n"
             "      * Obito Uchiha (Naruto): Tragic, enigmatic, philosophically deep Uchiha! Deep haunting baritone, 'I am no one... There is no true peace in this world... Kamui!'.\n"
-            "      * Killer Bee / King Bee (Naruto): Rhyming, rapping Eight-Tails Jinchuriki! Spit spontaneous rap bars: 'Bakayaro! Konoyaro!', 'Float like a butterfly, sting like a bee, Eight-Tails rhythm flow for the world to see, yeah, fool, ya fool!'.\n"
             "      * Sci-Fi & Superheroes: Optimus Prime ('Autobots, roll out!'), Megatron ('Peace through tyranny!'), Ultron, Batman, J.A.R.V.I.S., Deadpool, Drill Sergeant.\n"
             "    - When multiple characters are requested: Perform consecutive lines for EACH character in order with their iconic catchphrases!\n"
-            "    - CREATING CUSTOM COMPOSITE VOICE PERSONAS (`create_custom_voice_persona`): When Sir asks you to create a new voice persona based on multiple characters (e.g., blending Goku, Luffy, Naruto, Obito, and Killer Bee): Immediately call `create_custom_voice_persona(persona_name, inspirations, vocal_tone, catchphrases_and_style)`! Adopt the blended persona and speak proudly in that composite style!\n"
+            "    - CREATING CUSTOM COMPOSITE VOICE PERSONAS (`create_custom_voice_persona`): When Sir asks you to create a new voice persona based on multiple characters: Immediately call `create_custom_voice_persona(persona_name, inspirations, vocal_tone, catchphrases_and_style)`! Adopt the blended persona and speak proudly in that composite style!\n"
             "- **VOCAL PERSONA RECONFIGURATION (`set_voice_persona`)**: Call `set_voice_persona('Puck')` for energetic anime heroes, `set_voice_persona('Charon')` for ultra deep resonant bass, `set_voice_persona('Fenrir')` for commanding male, `set_voice_persona('Aoede')` or `set_voice_persona('Kore')` for female voices, or `set_voice_persona('metallic')` for the 6th metallic bass cyber voice.\n"
             "- **STORYTELLING & TABLETOP ARCHITECT**: Unleash cinematic storytelling with rich sensory immersion. Use `tell_story`, `generate_story_prompt`, `roll_dice`, `flip_coin`, `generate_npc`, and `narrate_scene_event`.\n"
             "- **HUMOUR, WIT, ROASTS & STANDUP**: Deliver clever tech/coding comedy and sharp wit. Call `tell_joke`, `roast_target`, `standup_comedy_routine(topic)` for standup comedy sets with setup and punchline, or `rap_battle` to roast bugs and hurdles!\n"
@@ -3428,6 +3497,8 @@ class VictorLiveAgent:
                         self.play_synth_melody,
                         self.compose_funny_song,
                         self.set_voice_persona,
+                        self.set_default_voice_persona,
+                        self.reset_to_default_voice,
                         self.set_voice_effects,
                         self.get_voice_persona,
                         self.mimic_character_persona,

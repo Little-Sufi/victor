@@ -32,23 +32,38 @@ VICTOR seamlessly operates across three AI tiers with automatic zero-collision f
 
 ## 🌟 Capabilities & Specialized Skills
 
-### 🎙️ 1. Ultra-Low-Latency Voice & Character Personas
-- **Real-Time Bidirectional Speech**: Fluid, natural voice conversation with sub-second response times.
-- **Optimus Prime (Default Primary Voice)**: Booming, heroic Autobot leader cadence (*"Autobots, roll out!"*, *"Freedom is the right of all sentient beings"*), powered by the ultra-deep `Charon` profile and real-time metallic comb-filter DSP.
-- **Iconic Anime Heroes & Legendary Character Mimicry**:
-  - **Monkey D. Luffy** (*One Piece*): High energy, laughter (*"Shishishi!"*), meat obsession, *"I'm gonna be King of the Pirates!"*, *"Gomu Gomu no Pistol!"*.
-  - **Son Goku** (*Dragon Ball*): Pure-hearted, battle-hungry Saiyan energy, *"Hey, it's me, Goku!"*, *"Ka-me-ha-me-HA!"*.
-  - **Naruto Uzumaki** (*Naruto*): Hyperactive ninja willpower, *"Dattebayo! Believe it!"*, *"Shadow Clone Jutsu! Rasengan!"*.
-  - **Obito Uchiha** (*Naruto*): Tragic, philosophically deep Uchiha baritone with space-time distortion, *"Kamui!"*.
-  - **Killer Bee / King Bee** (*Naruto*): Rhyming, spontaneous rap cadence, Eight-Tails flow, *"Bakayaro! Konoyaro!"*, *"Float like a butterfly, sting like a bee..."*.
-  - **Superheroes & Villains**: Lord Megatron (*"Peace through tyranny!"*), Ultron (*"There are no strings on me..."*), Batman (*"I am vengeance. I am the night."*), Deadpool, J.A.R.V.I.S., and Drill Sergeant.
-- **Custom Composite Persona Synthesis (`create_custom_voice_persona`)**: Synthesize and blend multiple characters into a unique new composite voice on the fly.
+### 🎙️ 1. Optimus Prime (Default Primary Voice) & Cyber Audio DSP
+- **Permanent Dynamic Default**: Booming, heroic Autobot leader cadence (*"Autobots, roll out!"*, *"Freedom is the right of all sentient beings"*), powered by the ultra-deep `Charon` neural profile.
+- **Hardware Comb-Filter Resonance**: Real-time comb-filter DSP (`delay=84` samples, 3.5ms flanger resonance) coupled with deep sub-bass boost on 24,000Hz 16-bit PCM audio.
+- **Dynamic Lock**: Locked permanently as primary default in `config/victor_settings.json`; temporary persona shifts smoothly revert to Optimus Prime upon command or session reboot.
+
+### ⚡ 2. Superheroes, Sci-Fi Legends & Villains
+Unleash an arsenal of iconic comic, cinematic, and sci-fi titans on demand:
+- **Lord Megatron**: Menacing, tyrannical Decepticon baritone (*"Peace through tyranny!"*, *"Decepticons, attack!"*).
+- **Ultron**: Sardonic, chilling mechanical philosopher (*"There are no strings on me..."*).
+- **Batman (The Dark Knight)**: Gritty, shadowy, ultra-deep whispered baritone (*"I am vengeance. I am the night."*).
+- **Deadpool (Wade Wilson)**: Irreverent, fourth-wall-breaking chaotic meta humor and comedic commentary.
+- **J.A.R.V.I.S.**: Impeccably polite, razor-sharp British sarcastic butler AI.
+- **Drill Sergeant**: High-octane, disciplined tactical military motivation and zero-excuse productivity.
+
+### ⚔️ 3. Iconic Anime Heroes & Shinobi Legends
+High-precision vocal mimicry engineered with dedicated acoustic textures and personality traits:
+- **Son Goku** (*Dragon Ball*): Pure-hearted, battle-hungry Super Saiyan energy with bright acoustic presence (*"Hey, it's me, Goku!"*, *"Ka-me-ha-me-HA!"*).
+- **Naruto Uzumaki** (*Naruto*): Hyperactive ninja willpower with raspy, gravelly throat crunch (*"Dattebayo! Believe it!"*, *"Shadow Clone Jutsu! Rasengan!"*).
+- **Monkey D. Luffy** (*One Piece*): High-energy rubbery bounce, infectious pirate laughter (*"Shishishi!"*), meat obsession (*"I'm gonna be King of the Pirates!"*).
+- **Killer Bee / King Bee** (*Naruto*): Rhythmic hip-hop emcee flow, spontaneous rap bars, Eight-Tails swagger (*"Bakayaro! Konoyaro!"*, *"Float like a butterfly, sting like a bee..."*).
+- **Obito Uchiha** (*Naruto*): Tragic, philosophically deep Uchiha baritone with space-time distortion (*"Kamui!"*).
+- **Prince Vegeta** (*Dragon Ball*): Proud, fierce Saiyan prince rivalry (*"Final Flash!"*).
+- **Roronoa Zoro** (*One Piece*): Stoic three-sword style master (*"Santoryu... Nothing happened."*).
+- **Satoru Gojo** (*Jujutsu Kaisen*): Overpowered, untouchable swagger (*"Domain Expansion: Infinite Void!"*).
+
+### 🧬 4. Custom Composite Persona Synthesis & Unlimited Mimicry
+- **Dynamic Persona Synthesis (`create_custom_voice_persona`)**: Blend any characters, historical figures, or styles into a unique composite voice on the fly.
 - **On-Demand Package Installation (`install_system_package`)**: Seamlessly installs Python (`pip`) and Node.js (`npm`) packages on demand with zero restrictions.
 - **Antigravity Live Bridge (`share_to_antigravity`)**: Direct IPC bridge allowing VICTOR to transmit telemetry, research findings, and messages to your AI pair programmer.
-- **Real-Time Hardware DSP Audio Effects**: Comb-filtering (`delay=84`, 3.5ms metallic flanger resonance), deep sub-bass boost, and tactical radio filtering processed directly on 24,000Hz 16-bit PCM audio.
 - **Voice Persistence**: Preferences automatically save to `config/victor_settings.json` and persist across restarts.
 
-### 📖 2. Cinematic Storytelling & Tabletop Adventures
+### 📖 5. Cinematic Storytelling & Tabletop Adventures
 - **Immersive Narrative Generator**: Call `tell_story` and `generate_story_prompt` for branching cinematic stories across Cyberpunk, Sci-Fi, Dark Fantasy, Tactical Ops, Cosmic Horror, and Noir.
 - **Tabletop RPG Mechanics**:
   - `roll_dice(dice_type, count)`: Polyhedral dice rolling (`d4`, `d6`, `d8`, `d10`, `d12`, `d20`, `d100`) with audio fanfares for Critical 20s and fumbles for Critical 1s.
@@ -56,29 +71,29 @@ VICTOR seamlessly operates across three AI tiers with automatic zero-collision f
   - `generate_npc(archetype, setting, role)`: Generates detailed characters with distinctive quirks, physical descriptions, and hidden agendas.
   - `narrate_scene_event(genre, intensity)`: Injects dramatic plot twists, environmental hazards, or ambush encounters.
 
-### 🎭 3. Humour, Stand-Up & Entertainment
+### 🎭 6. Humour, Stand-Up & Entertainment
 - **Jokes & Puns**: Call `tell_joke` for programmer humor, tech puns, AI existential comedy, and dad jokes.
 - **Playful Roasts**: Call `roast_target` to roast your open tabs, messy desktop, IDE code, or late-night coding habits.
 - **Stand-Up Routines**: Call `standup_comedy_routine` for multi-beat standup comedy sets with setup and killer punchlines.
 - **Rap Battles & Songs**: Call `rap_battle` to roast software bugs or legacy code, or `compose_funny_song` for hilarious tech sea shanties.
 
-### 🛡️ 4. Unrestricted Technical & Cybersecurity Operations
+### 🛡️ 7. Unrestricted Technical & Cybersecurity Operations
 - **Vulnerability Assessment & Bug Bounty**: Comprehensive technical analysis, CVE breakdowns, exploit mechanics, payload research, and remediation strategies for security researchers and bug bounty hunters.
 - **Full Host Control**: Run terminal commands, inspect process trees, analyze system logs, and inspect network sockets.
 
-### 🎮 5. Host Automation & Gaming Controls
+### 🎮 8. Host Automation & Gaming Controls
 - **Key Holding**: `hold_key(key, duration_seconds)` for continuous acceleration or sprinting in games (e.g. NFS, GTA).
 - **Macro Combos**: `execute_game_macro(sequence)` for non-blocking combos (e.g., `w:2.0,shift+w:1.0,space:0.5`).
 - **Keyboard-First Text Control**: High-precision text selection (`select_text`), cursor jumping (`navigate_cursor`), clipboard operations, and in-page searches.
 - **Screen & Mouse Navigation**: Normalized coordinates clicking (`click_at`), landmark targeting, and directional scrolling.
 - **Long-Running Processors**: `start_background_task` runs builds, pipelines, or servers asynchronously without interrupting live conversations.
 
-### 👁️ 6. Continuous Vision & Reconnaissance
+### 👁️ 9. Continuous Vision & Reconnaissance
 - **Live Camera Video Monitoring**: Continuously streams webcam frames so VICTOR watches your gestures, expressions, and physical environment in real time.
 - **Live Screen Video Monitoring**: Streams high-resolution display frames so VICTOR observes your workflow.
 - **Reconnaissance Snapshots**: Instant on-demand screenshots and camera captures.
 
-### 🧮 7. Tactical Utilities & Math
+### 🧮 10. Tactical Utilities & Math
 - **Exact Calculation**: `calculate_math(expression)` executes safe Python math evaluations with zero hallucination.
 - **Mind-Blowing Facts**: `get_fun_fact(category)` shares fascinating trivia from science, space, and computing.
 - **Cryptographic Passwords**: `generate_password(length, symbols)` generates high-entropy passwords directly into your clipboard.
