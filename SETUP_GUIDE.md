@@ -1,6 +1,6 @@
 # VICTOR Setup Guide — Cross-Platform Installation
 
-**Creator: AMKC**  
+**Creator: [Little-Sufi](https://github.com/Little-Sufi)**  
 **VICTOR: Virtual Intelligence Created To Outsmart Reality**
 
 This guide provides complete, step-by-step instructions to configure, install, and execute VICTOR on **Windows 10/11** and **Linux (Ubuntu, Debian, Fedora, Arch)**.

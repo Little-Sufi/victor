@@ -1,13 +1,13 @@
 # ========================================================
 #  VICTOR Installation Script for Windows (PowerShell)
-#  Creator: AMKC
+#  Creator: Little-Sufi
 #  VICTOR: Virtual Intelligence Created To Outsmart Reality
 # ========================================================
 $ErrorActionPreference = "Stop"
 
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host "  VICTOR AI Installation Script (Windows) " -ForegroundColor Cyan
-Write-Host "  Creator: AMKC                           " -ForegroundColor Cyan
+Write-Host "  Creator: Little-Sufi                    " -ForegroundColor Cyan
 Write-Host "==========================================" -ForegroundColor Cyan
 Write-Host ""
 

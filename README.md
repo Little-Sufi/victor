@@ -1,6 +1,6 @@
 # VICTOR — Virtual Intelligence Created To Outsmart Reality
 
-**Created by AMKC**
+**Created by [Little-Sufi](https://github.com/Little-Sufi)**
 
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)
 ![Gemini Live](https://img.shields.io/badge/Tier%201-Gemini%20Live%20API-orange)
@@ -9,7 +9,7 @@
 ![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey?logo=windows)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**VICTOR** (Virtual Intelligence Created To Outsmart Reality) is a cutting-edge autonomous AI companion and tactical host operating system operator created by **AMKC**. 
+**VICTOR** (Virtual Intelligence Created To Outsmart Reality) is a cutting-edge autonomous AI companion and tactical host operating system operator created by **[Little-Sufi](https://github.com/Little-Sufi)**. 
 
 Engineered with an ultra-low-latency bidirectional streaming audio core, continuous real-time video vision (camera and screen), legendary character voice mimicry with hardware DSP comb filtering, gaming macro automation, full keyboard and mouse host control, and unrestricted technical problem-solving capabilities.
 
@@ -170,6 +170,6 @@ High-precision vocal mimicry engineered with dedicated acoustic textures and per
 
 ## 👤 Credits
 
-- **Project Creator & Lead Architect**: **AMKC**
+- **Project Creator & Lead Architect**: **[Little-Sufi](https://github.com/Little-Sufi)**
 - **Project Name**: **VICTOR** (*Virtual Intelligence Created To Outsmart Reality*)
 - **License**: MIT License

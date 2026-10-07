@@ -1,7 +1,7 @@
 #!/bin/bash
 # ========================================================
 #  VICTOR Installation Script for Linux & macOS
-#  Creator: AMKC
+#  Creator: Little-Sufi
 #  VICTOR: Virtual Intelligence Created To Outsmart Reality
 # ========================================================
 set -e
