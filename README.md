@@ -15,6 +15,19 @@ Engineered with an ultra-low-latency bidirectional streaming audio core, continu
 
 ---
 
+## 📚 Official Documentation & Wiki
+
+Explore detailed guides and architectural references in the **[VICTOR Wiki](wiki/Home.md)**:
+
+* 🏛️ **[Architecture & Multi-Tier AI](wiki/Architecture-and-Multi-Tier-AI.md)** — Deep dive into Tier 1 (Gemini Live), Tier 2 (OpenAI), and Tier 3 (Ollama) zero-collision failovers.
+* 🎙️ **[Voice Engine & DSP Audio](wiki/Voice-Engine-and-DSP-Audio.md)** — Hardware comb-filter DSP resonance, Optimus Prime leader voice profile, and character mimicry.
+* 👁️ **[Vision & Screen Recon](wiki/Vision-and-Screen-Recon.md)** — Real-time camera and desktop screen analysis pipelines.
+* 🎮 **[Host Automation & Gaming](wiki/Host-Automation-and-Gaming.md)** — Macro combos (`execute_game_macro`), continuous key holds, and desktop control.
+* ⚙️ **[Configuration & Environment](wiki/Configuration-and-Environment.md)** — Complete `.env` variables and `config/victor_settings.json` parameter guide.
+* ❓ **[Troubleshooting & FAQ](wiki/Troubleshooting-and-FAQ.md)** — Audio feedback fixes, offline mode execution, and connection troubleshooting.
+
+---
+
 ## ⚡ Multi-Provider Architecture (Zero Collisions)
 
 VICTOR seamlessly operates across three AI tiers with automatic zero-collision fallback:
